@@ -11,7 +11,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     use aptos_framework::aptos_account;
 
     //Custom Imports
-    use projectOwnerAdr::DecimalUtils as DecimalUtils
+    use projectOwnerAdr::DecimalUtils as DecimalUtils;
 
     //Definitions
     const RESOURCE_SEED: vector<u8> = b"PlatformFee"; // This could be any seed
