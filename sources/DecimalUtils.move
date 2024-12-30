@@ -57,6 +57,6 @@ module projectOwnerAdr::DecimalUtils {
             result = result * base;
             count = count + 1;
         }
-        return result;
+        result
     }
 }
