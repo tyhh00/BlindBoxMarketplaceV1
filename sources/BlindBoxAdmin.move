@@ -16,6 +16,9 @@ module projectOwnerAdr::BlindBoxAdminContract {
     //Definitions
     const RESOURCE_SEED: vector<u8> = b"PlatformFee"; // This could be any seed
 
+    //Errors
+    const YOU_ARE_NOT_PROJECT_OWNER: u64 = 1;
+
     struct PlatformFeeSettings has key {
         blindbox_platformFee_Percent: DecimalUtils::Decimal,
         
@@ -27,6 +30,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     }
     
     fun init_module(owner_signer: &signer) {
+        assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
         let (resource_signer, signer_cap) = account::create_resource_account(owner_signer, RESOURCE_SEED);
         let platformFeeSettings = PlatformFeeSettings {
             blindbox_platformFee_Percent: Decimal(5 , 2),
