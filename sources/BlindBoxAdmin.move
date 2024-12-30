@@ -7,8 +7,8 @@ module projectOwnerAdr::BlindBoxAdminContract {
     use std::option::{Self, Option};
 
     //Supra Framework Imports
-    use aptos_framework::account::{Self, SignerCapability};
-    use aptos_framework::aptos_account;
+    use supra_framework::account::{Self, SignerCapability};
+    use supra_framework::supra_account;
 
     //Custom Imports
     use projectOwnerAdr::DecimalUtils as DecimalUtils;
