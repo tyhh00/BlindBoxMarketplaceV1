@@ -24,9 +24,9 @@ module projectOwnerAdr::BlindBoxAdminContract {
     struct PlatformFeeSettings has key {
         blindbox_platformFee_Percent: Decimal,
         
-        nft_totalRoyalty_Percent: u256,
-        nft_RoyaltiesToCreator_Percent: u64,
-        nft_RoyaltiesToPlatform_Percent: u64,
+        nft_totalRoyalty_Percent: Decimal,
+        nft_RoyaltiesToCreator_Percent: Decimal,
+        nft_RoyaltiesToPlatform_Percent: Decimal,
 
         signer_cap: SignerCapability,
     }
@@ -60,12 +60,12 @@ module projectOwnerAdr::BlindBoxAdminContract {
     }
 
     /// Converts a Decimal back to its floating-point representation as a string
-    public fun decimal_to_string(decimal: &Decimal): String {
+    public fun decimal_to_string(decimal: &Decimal): string {
         let divisor = pow(10, decimal.scale);
         let integer_part = decimal.value / divisor;
         let fractional_part = decimal.value % divisor;
-        str::concat(
-            str::concat(integer_part, b"."),
+        string::concat(
+            string::concat(integer_part, b"."),
             fractional_part
         )
     }
