@@ -51,8 +51,8 @@ module projectOwnerAdr::DecimalUtils {
 
     /// Helper function to compute powers of 10
     fun pow(base: u64, exponent: u8): u64 {
-        let result = 1;
-        let count = 0;
+        let mut result = 1;
+        let mut count = 0;
         while (count < exponent) {
             result = result * base;
             count = count + 1;
