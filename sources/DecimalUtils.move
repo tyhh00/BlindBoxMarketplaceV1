@@ -56,7 +56,7 @@ module projectOwnerAdr::DecimalUtils {
         while (count < exponent) {
             result = result * base;
             count = count + 1;
-        }
+        };
         result
     }
 }
