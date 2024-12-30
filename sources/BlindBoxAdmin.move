@@ -16,7 +16,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     //Errors
     const YOU_ARE_NOT_PROJECT_OWNER: u64 = 1;
 
-    public struct Decimal has store {
+    struct Decimal has store {
         value: u64,  // The scaled integer value
         scale: u8,   // Number of decimal places
     }
