@@ -35,10 +35,10 @@ module projectOwnerAdr::BlindBoxAdminContract {
         assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
         let (resource_signer, signer_cap) = account::create_resource_account(owner_signer, RESOURCE_SEED);
         let platformFeeSettings = PlatformFeeSettings {
-            blindbox_platformFee_Percent: Decimal{5 , 2},
-            nft_totalRoyalty_Percent: Decimal{5 , 2},
-            nft_RoyaltiesToCreator_Percent: Decimal{75 , 2},
-            nft_RoyaltiesToPlatform_Percent: Decimal{25 , 2},
+            blindbox_platformFee_Percent: Decimal{value:5 , scale:2},
+            nft_totalRoyalty_Percent: Decimal{value:5 , scale:2},
+            nft_RoyaltiesToCreator_Percent: Decimal{value:75 , scale:2},
+            nft_RoyaltiesToPlatform_Percent: Decimal{value:25 , scale:2},
             signer_cap,
         };
         move_to(&resource_signer, platformFeeSettings);
