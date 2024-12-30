@@ -7,7 +7,7 @@ module projectOwnerAdr::BlindBoxContract {
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
 
-    use supra_addr::supra_vrf; //Not whitelisted yet
+    //use supra_addr::supra_vrf; //Not whitelisted yet
 
 
 }
