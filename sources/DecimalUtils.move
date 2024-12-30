@@ -16,7 +16,7 @@ module projectOwnerAdr::DecimalUtils {
         let integer_part = decimal.value / divisor;
         let fractional_part = decimal.value % divisor;
         str::concat(
-            str::concat(integer_part, "."),
+            str::concat(integer_part, b"."),
             fractional_part
         )
     }
