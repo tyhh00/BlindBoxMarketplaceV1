@@ -1,6 +1,6 @@
 module projectOwnerAdr::DecimalUtils {
     /// A struct to represent decimal values
-    struct Decimal has store {
+    public struct Decimal has store {
         value: u64,  // The scaled integer value
         scale: u8,   // Number of decimal places
     }
