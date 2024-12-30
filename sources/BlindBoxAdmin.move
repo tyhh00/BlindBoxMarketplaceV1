@@ -59,17 +59,6 @@ module projectOwnerAdr::BlindBoxAdminContract {
         Decimal { value, scale }
     }
 
-    /// Converts a Decimal back to its floating-point representation as a string
-    public fun decimal_to_string(decimal: &Decimal): string {
-        let divisor = pow(10, decimal.scale);
-        let integer_part = decimal.value / divisor;
-        let fractional_part = decimal.value % divisor;
-        string::concat(
-            string::concat(integer_part, b"."),
-            fractional_part
-        )
-    }
-
     /// Adds two Decimal values
     public fun decimal_add(dec1: &Decimal, dec2: &Decimal): Decimal {
         assert!(dec1.scale == dec2.scale, 1);  // Ensure both decimals have the same scale
