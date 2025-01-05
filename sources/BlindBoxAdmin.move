@@ -32,7 +32,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     }
     
     //This apparently gets executed automatically on publishing
-    entry fun init_module(owner_signer: &signer) {
+    fun init_module(owner_signer: &signer) {
         assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
         let (resource_signer, signer_cap) = account::create_resource_account(owner_signer, RESOURCE_SEED);
         let platformFeeSettings = PlatformFeeSettings {
@@ -46,7 +46,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     }
 
     #[view]
-    /// Get resource account address
+    /// Get resource account address.
     fun get_resource_address(): address {
         account::create_resource_address(&@projectOwnerAdr, RESOURCE_SEED)
     }

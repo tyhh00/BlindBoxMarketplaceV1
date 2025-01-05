@@ -45,7 +45,12 @@ module projectOwnerAdr::BlindBoxContract {
             mutate_setting
         );
 
-        // Example of multiple properties
+        // Example of multiple properties Creating the "metadata" on chain for the nft, that is
+        // then move_to the signer address when move to is called, it means it mints at the signer's address. 
+        // move to is helpful, we can store all the created tokens' metadata somewhere, then only when the user lands
+        // on that item, we mint it. Also check how many has been minted before, if its maxed out, remove from the pool of
+        // "active rolls" items and their chances, then the "Hisotrical rolls" pool will show the items that ran out already
+        // indicating that they wont be dropped in this collection anymore.
         let token_data_id = token::create_tokendata(
             source_account,
             string::utf8(&collection_name),
