@@ -12,7 +12,6 @@ module projectOwnerAdr::NFTCreationContract {
     const ENOT_AUTHORIZED: u64 = 1;
 
     fun init_module(owner_signer: &signer) {
-        assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
     }
 
     /// `init_module` is automatically called when publishing the module.
