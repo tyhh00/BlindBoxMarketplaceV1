@@ -16,8 +16,8 @@ module projectOwnerAdr::BlindBoxContract {
     struct ModuleData has key {
         token_data_id: TokenDataId,
     }
-    struct TokenDataId has key {
-        
+    struct TokenDataId has key, store {
+        a: u64
     }
 
     fun init_module(owner_signer: &signer) {
