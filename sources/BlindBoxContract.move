@@ -51,7 +51,7 @@ module projectOwnerAdr::BlindBoxContract {
     let royalty_denominator = 100;
 
     // Create the collection using the new standard
-    create_collection(
+    token::create_collection(
         source_account,
         description_str,
         maximum_supply,
