@@ -40,9 +40,9 @@ module projectOwnerAdr::BlindBoxContract {
         // Create the NFT collection using the parameters passed into the function.
         token::create_collection(
             source_account,
-            string::utf8(&collection_name),
-            string::utf8(&description),
-            string::utf8(&collection_uri),
+            string::utf8(collection_name),
+            string::utf8(description),
+            string::utf8(collection_uri),
             maximum_supply,
             mutate_setting
         );
@@ -55,11 +55,11 @@ module projectOwnerAdr::BlindBoxContract {
         // indicating that they wont be dropped in this collection anymore.
         let token_data_id = token::create_tokendata(
             source_account,
-            string::utf8(&collection_name),
-            string::utf8(&token_name),
+            string::utf8(collection_name),
+            string::utf8(token_name),
             string::utf8(b"Token description"),   // Token description
             0,
-            string::utf8(&token_uri),
+            string::utf8(token_uri),
             signer::address_of(source_account),
             1,                                   // Royalty percentage
             0,                                   // Maximum supply
