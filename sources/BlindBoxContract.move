@@ -78,7 +78,7 @@ module projectOwnerAdr::BlindBoxContract {
         token_name_str,                             
         token_uri_str, 
         vector<String>[string::utf8(b"given_to")],
-        vector<String>[string::utf8(b"address")]
+        vector<String>[string::utf8(b"address")],
         vector<vector<u8>>[b""],
     );
 
