@@ -1,4 +1,4 @@
-module projectOwnerAdr::NFTCreationContract {
+module projectOwnerAdr::BlindBoxContract {
     use std::signer;
     use std::vector;
     use std::string::{Self, String};
@@ -10,6 +10,12 @@ module projectOwnerAdr::NFTCreationContract {
 
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
+
+    use projectOwnerAdr::BlindBoxAdminContract::get_resource_address() as adminResourceAddressSettings;
+
+    struct ModuleData has key {
+        token_data_id: TokenDataId,
+    }
 
     fun init_module(owner_signer: &signer) {
     }
