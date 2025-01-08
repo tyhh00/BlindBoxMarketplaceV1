@@ -11,7 +11,7 @@ module projectOwnerAdr::BlindBoxContract {
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
 
-    use projectOwnerAdr::BlindBoxAdminContract::get_resource_address() as adminResourceAddressSettings;
+    use projectOwnerAdr::BlindBoxAdminContract::get_resource_address as adminResourceAddressSettings;
 
     struct ModuleData has key {
         token_data_id: TokenDataId,
