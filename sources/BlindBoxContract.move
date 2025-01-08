@@ -26,7 +26,7 @@ module projectOwnerAdr::BlindBoxContract {
         description: vector<u8>,
         collection_uri: vector<u8>,
         token_name: vector<u8>,
-        maximum_supply: u256,
+        maximum_supply: u64,
         token_uri: vector<u8>
     ) {
         //Maximum Supply of 0 means infinite, amount means it is fixed.
