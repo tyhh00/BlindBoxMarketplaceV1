@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract {
+module projectOwnerAdr::NFTCreationContract {
     use std::signer;
     use std::vector;
     use std::string::{Self, String};
@@ -6,10 +6,14 @@ module projectOwnerAdr::BlindBoxContract {
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
-    use aptos_token_objects::aptos_token as token;
+    use aptos_token_objects::aptos_token;
 
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
+
+    fun init_module(owner_signer: &signer) {
+        assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
+    }
 
     /// `init_module` is automatically called when publishing the module.
     /// In this function, we create an example NFT collection and an example token.
@@ -47,7 +51,7 @@ module projectOwnerAdr::BlindBoxContract {
     let royalty_denominator = 100;
 
     // Create the collection using the new standard
-    token::create_collection(
+    aptos_token::create_collection(
         source_account,
         description_str,
         maximum_supply,
@@ -67,7 +71,7 @@ module projectOwnerAdr::BlindBoxContract {
     );
 
     // Example of creating token data (metadata) for the NFT
-    token::mint(
+    aptos_token::mint(
         source_account,
         collection_name_str,
         string::utf8(b"Token description"), // Token description
