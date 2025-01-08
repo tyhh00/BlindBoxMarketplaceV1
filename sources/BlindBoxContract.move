@@ -6,6 +6,8 @@ module projectOwnerAdr::BlindBoxContract {
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
+    use supra_token::token;
+    use supra_token::token::TokenDataId;
 
     //use supra_addr::supra_vrf; //Not whitelisted yet
     use projectOwnerAdr::BlindBoxAdminContract::get_resource_address as adminResourceAddressSettings;
