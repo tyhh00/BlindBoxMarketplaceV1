@@ -6,16 +6,16 @@ module projectOwnerAdr::BlindBoxContract {
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
-    use supra_framework::supra_token::token;
-    //use supra_framework::supra_token::token::TokenDataId;
+    use aptos::token;
+    use aptos::token::TokenDataId;
 
     //use supra_addr::supra_vrf; //Not whitelisted yet
     use projectOwnerAdr::BlindBoxAdminContract::get_resource_address as adminResourceAddressSettings;
 
      // This struct stores an NFT collection's relevant information
-    //struct ModuleData has key {
-    //    token_data_id: TokenDataId,
-    //}
+    struct ModuleData has key {
+        token_data_id: TokenDataId,
+    }
 
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
@@ -89,9 +89,9 @@ module projectOwnerAdr::BlindBoxContract {
 
         // Store the token data id within the module, so we can refer to it later
         // when we're minting the NFT and updating its property version.
-        move_to(source_account, 
-            token_data_id
-        );
+        move_to(source_account, ModuleData {
+            token_data_id,
+        });
     }
 
 
