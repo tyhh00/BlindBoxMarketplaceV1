@@ -1,7 +1,7 @@
 module projectOwnerAdr::BlindBoxContract {
     use std::signer;
     use std::vector;
-    use std::string;
+    use std::string::{Self, String};
     use std::error;
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
