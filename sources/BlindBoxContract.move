@@ -74,15 +74,15 @@ module projectOwnerAdr::BlindBoxContract {
             ],
             // Property values (must match the order of keys)
             vector<vector<u8>>[
-                string::utf8(b""),                            // Property 1: Value (e.g., "given_to" not set yet)
-                string::utf8(b"Legendary"),                   // Property 2: Value (e.g., rarity level "Legendary")
-                string::utf8(b"Japan")                        // Property 3: Value (e.g., origin country "Japan")
+                b"",                            // Property 1: Value (e.g., "given_to" not set yet)
+                b"Legendary",                   // Property 2: Value (e.g., rarity level "Legendary")
+                b"Japan"                        // Property 3: Value (e.g., origin country "Japan")
             ],
             // Property types (indicating the data type of the values)
             vector<vector<u8>>[
-                string::utf8(b"address"),       // Property 1: Type (e.g., "address" for given_to)
-                string::utf8(b"string"),        // Property 2: Type (e.g., "string" for rarity)
-                string::utf8(b"string")         // Property 3: Type (e.g., "string" for origin)
+                b"address",       // Property 1: Type (e.g., "address" for given_to)
+                b"string",        // Property 2: Type (e.g., "string" for rarity)
+                b"string"         // Property 3: Type (e.g., "string" for origin)
             ]
         );
 
