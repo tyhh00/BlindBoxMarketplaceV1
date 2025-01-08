@@ -18,82 +18,81 @@ module projectOwnerAdr::BlindBoxContract {
     /// `init_module` is automatically called when publishing the module.
     /// In this function, we create an example NFT collection and an example token.
     public entry fun create_collection(
-        source_account: &signer,
-        collection_name: vector<u8>,
-        description: vector<u8>,
-        collection_uri: vector<u8>,
-        token_name: vector<u8>,
-        maximum_supply: u64,
-        token_uri: vector<u8>
-    ) {
-        //Maximum Supply of 0 means infinite, amount means it is fixed.
+    source_account: &signer,
+    collection_name: vector<u8>,
+    description: vector<u8>,
+    collection_uri: vector<u8>,
+    token_name: vector<u8>,
+    maximum_supply: u64,
+    token_uri: vector<u8>
+) {
+    // Convert the vectors to strings
+    let collection_name_str = string::utf8(collection_name);
+    let description_str = string::utf8(description);
+    let collection_uri_str = string::utf8(collection_uri);
+    let token_name_str = string::utf8(token_name);
+    let token_uri_str = string::utf8(token_uri);
 
-        // This variable sets if we want to allow mutation for collection description, uri, and maximum.
-        // Here, we are setting all of them to false, which means that we don't allow mutations to any CollectionData fields.
-        let mutate_setting = vector<bool>[true, true, false];
+    // Define mutable settings
+    let mutable_description = false;
+    let mutable_royalty = false;
+    let mutable_uri = false;
+    let mutable_token_description = false;
+    let mutable_token_name = false;
+    let mutable_token_properties = false;
+    let mutable_token_uri = false;
 
-        // Create the NFT collection using the parameters passed into the function.
-        token::create_collection(
-            source_account,
-            string::utf8(collection_name),
-            string::utf8(description),
-            string::utf8(collection_uri),
-            maximum_supply,
-            mutate_setting
-        );
+    // Define burn and freeze permissions for creator
+    let tokens_burnable_by_creator = false;
+    let tokens_freezable_by_creator = false;
 
-        // Example of multiple properties Creating the "metadata" on chain for the nft, that is
-        // then move_to the signer address when move to is called, it means it mints at the signer's address. 
-        // move to is helpful, we can store all the created tokens' metadata somewhere, then only when the user lands
-        // on that item, we mint it. Also check how many has been minted before, if its maxed out, remove from the pool of
-        // "active rolls" items and their chances, then the "Hisotrical rolls" pool will show the items that ran out already
-        // indicating that they wont be dropped in this collection anymore.
-        let token_data_id = token::create_tokendata(
-            source_account,
-            string::utf8(collection_name),
-            string::utf8(token_name),
-            string::utf8(b"Token description"),   // Token description
-            0,
-            string::utf8(token_uri),
-            signer::address_of(source_account),
-            1,                                   // Royalty percentage
-            0,                                   // Maximum supply
-            token::create_token_mutability_config(
-                &vector<bool>[false, false, false, false, true]
-            ),
-            // Property keys (e.g., traits, metadata, etc.)
-            vector<String>[string::utf8(b"given_to")],
-            vector<vector<u8>>[b""],
-            vector<String>[ string::utf8(b"address") ],
+    // Define royalty settings (10% royalty)
+    let royalty_numerator = 10;
+    let royalty_denominator = 100;
 
-            /*
-            vector<String>[
-                string::utf8(b"given_to",      // Property 1: Key
-                string::utf8(b"rarity",        // Property 2: Key
-                string::utf8(b"origin"         // Property 3: Key
-            ],
-            // Property values (must match the order of keys)
-            vector<vector<u8>>[
-                b"",                            // Property 1: Value (e.g., "given_to" not set yet)
-                b"Legendary",                   // Property 2: Value (e.g., rarity level "Legendary")
-                b"Japan"                        // Property 3: Value (e.g., origin country "Japan")
-            ],
-            // Property types (indicating the data type of the values)
-            vector<String>[
-                string::utf8(b"address",       // Property 1: Type (e.g., "address" for given_to)
-                string::utf8(b"string",        // Property 2: Type (e.g., "string" for rarity)
-                string::utf8(b"string"         // Property 3: Type (e.g., "string" for origin)
-            ]
-            */
-        );
+    // Create the collection using the new standard
+    create_collection(
+        source_account,
+        description_str,
+        maximum_supply,
+        collection_name_str,
+        collection_uri_str,
+        mutable_description,
+        mutable_royalty,
+        mutable_uri,
+        mutable_token_description,
+        mutable_token_name,
+        mutable_token_properties,
+        mutable_token_uri,
+        tokens_burnable_by_creator,
+        tokens_freezable_by_creator,
+        royalty_numerator,
+        royalty_denominator
+    );
 
+    // Example of creating token data (metadata) for the NFT
+    let token_data_id = create_tokendata(
+        source_account,
+        collection_name_str,
+        token_name_str,
+        string::utf8(b"Token description"), // Token description
+        0,                                 // Initial amount (can be adjusted later)
+        token_uri_str,
+        signer::address_of(source_account),
+        1,                                 // Royalty percentage (1% in this case)
+        0,                                 // Maximum supply (0 means unlimited)
+        create_token_mutability_config(
+            &vector<bool>[false, false, false, false, true]  // Mutability configuration
+        ),
+        vector<String>[string::utf8(b"given_to")],
+        vector<vector<u8>>[b""],
+        vector<String>[string::utf8(b"address")]
+    );
 
-        // Store the token data id within the module, so we can refer to it later
-        // when we're minting the NFT and updating its property version.
-        move_to(source_account, ModuleData {
-            token_data_id,
-        });
-    }
+    // Optionally move token data to the creator's account if needed
+    move_to(source_account, token_data_id);
+}
+
 
 
 
