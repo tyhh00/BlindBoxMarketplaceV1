@@ -82,8 +82,6 @@ module projectOwnerAdr::BlindBoxContract {
         vector<vector<u8>>[b""],
     );
 
-    // Optionally move token data to the creator's account if needed
-    move_to(source_account, token_data_id);
 }
 
 
