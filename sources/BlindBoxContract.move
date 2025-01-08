@@ -8,7 +8,7 @@ module projectOwnerAdr::BlindBoxContract {
     use supra_framework::supra_account;
 
     //use supra_addr::supra_vrf; //Not whitelisted yet
-    use projectOwnerAdr::BlindBoxAdminContract::get_resource_address() as adminResourceAddressSettings;
+    use projectOwnerAdr::BlindBoxAdminContract::get_resource_address as adminResourceAddressSettings;
 
      // This struct stores an NFT collection's relevant information
     struct ModuleData has key {
