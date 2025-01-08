@@ -71,22 +71,15 @@ module projectOwnerAdr::BlindBoxContract {
     );
 
     // Example of creating token data (metadata) for the NFT
-    let token_data_id = create_tokendata(
+    token::mint(
         source_account,
         collection_name_str,
-        token_name_str,
         string::utf8(b"Token description"), // Token description
-        0,                                 // Initial amount (can be adjusted later)
-        token_uri_str,
-        signer::address_of(source_account),
-        1,                                 // Royalty percentage (1% in this case)
-        0,                                 // Maximum supply (0 means unlimited)
-        create_token_mutability_config(
-            &vector<bool>[false, false, false, false, true]  // Mutability configuration
-        ),
+        token_name_str,                             
+        token_uri_str, 
         vector<String>[string::utf8(b"given_to")],
-        vector<vector<u8>>[b""],
         vector<String>[string::utf8(b"address")]
+        vector<vector<u8>>[b""],
     );
 
     // Optionally move token data to the creator's account if needed
