@@ -1,7 +1,7 @@
 module projectOwnerAdr::BlindBoxContract {
     use std::signer;
     use std::vector;
-    use std::string::{Self, String};
+    use std::string;
     use std::error;
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
@@ -10,7 +10,6 @@ module projectOwnerAdr::BlindBoxContract {
 
     //use supra_addr::supra_vrf; //Not whitelisted yet
     use projectOwnerAdr::BlindBoxAdminContract::get_resource_address as adminResourceAddressSettings;
-
 
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
