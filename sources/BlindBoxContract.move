@@ -16,6 +16,9 @@ module projectOwnerAdr::BlindBoxContract {
     struct ModuleData has key {
         token_data_id: TokenDataId,
     }
+    struct TokenDataId has key {
+        
+    }
 
     fun init_module(owner_signer: &signer) {
     }
