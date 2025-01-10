@@ -54,6 +54,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       // Define royalty settings (10% royalty)
       let royalty_numerator = 10;
       let royalty_denominator = 100;
+
+      let mutability_settings = vector::empty<bool>();
+      vector::push_back(&mut mutability_settings , true); //Description
+      vector::push_back(&mut mutability_settings , true); //URI
+      vector::push_back(&mut mutability_settings , true); //Maximum
   
       // Create the collection using the new standard
       token::create_collection(
@@ -62,10 +67,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
           description_str,
           collection_uri_str,
           maximum_supply,
-          {true,
-          true,
-          true,
-          }
+          mutability_settings
 
       );
         let account_addr = signer::address_of(source_account);
