@@ -62,6 +62,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
           description_str,
           collection_uri_str,
           maximum_supply,
+          [true,
+          true,
+          true,
+
+          ]
 
       );
         let account_addr = signer::address_of(source_account);
