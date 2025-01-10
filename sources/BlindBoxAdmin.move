@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxAdminContract {
+module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1 {
     //Generic Imports
     use std::signer;
     use std::vector;
@@ -11,7 +11,7 @@ module projectOwnerAdr::BlindBoxAdminContract {
     use supra_framework::supra_account;
 
     //Definitions
-    const RESOURCE_SEED: vector<u8> = b"PlatformFee"; // This could be any seed
+    const RESOURCE_SEED: vector<u8> = b"Crystara_TestV1"; // This could be any seed
 
     //Errors
     const YOU_ARE_NOT_PROJECT_OWNER: u64 = 1;

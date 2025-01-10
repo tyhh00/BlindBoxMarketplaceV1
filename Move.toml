@@ -1,5 +1,5 @@
 [package]
-name = "BlindBox"
+name = "Crystara_TestV1"
 version = "1.0.0"
 authors = []
 
@@ -16,8 +16,7 @@ subdir = "aptos-move/framework/supra-framework"
 [dependencies.AptosTokenObjects]
 git = "https://github.com/Entropy-Foundation/aptos-core.git"
 rev = "dev"
-subdir = "aptos-move/framework/aptos-token-objects"
+subdir = "aptos-move/framework/aptos-token"
 
 [dev-dependencies]
 #SupraVrf = { git = "https://github.com/Entropy-Foundation/vrf-interface", subdir = "supra/testnet", rev = "fe8e55e9b8fd95b410a47afd4f3df2452eb317e7"  }
-
