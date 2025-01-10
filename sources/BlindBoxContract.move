@@ -7,7 +7,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
-    use aptos_token_objects::aptos_token;
+    use aptos_token::create_collection as create_collection0x3;
     use supra_framework::event;
     use supra_framework::timestamp;
     use supra_framework::guid::GUID;
@@ -19,6 +19,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     /// Market Settings
     use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
     
+    //Event Types
+
+    //Entry Functions
     public entry fun create_collection(
       source_account: &signer,
       collection_name: vector<u8>,
@@ -53,61 +56,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       let royalty_denominator = 100;
   
       // Create the collection using the new standard
-      aptos_token::create_collection(
+      create_collection0x3(
           source_account,
-          description_str,
-          maximum_supply,
           collection_name_str,
+          description_str,
           collection_uri_str,
-          mutable_description,
-          mutable_royalty,
-          mutable_uri,
-          mutable_token_description,
-          mutable_token_name,
-          mutable_token_properties,
-          mutable_token_uri,
-          tokens_burnable_by_creator,
-          tokens_freezable_by_creator,
-          royalty_numerator,
-          royalty_denominator
+          maximum_supply,
+
       );
         let account_addr = signer::address_of(source_account);
 
-        // Create the collection creation event
-        let new_event = CollectionCreatedEvent {
-            creator: account_addr,
-            collection_name: collection_name,
-            metadata_uri: collection_uri,
-            timestamp: timestamp::now_microseconds(), 
-        };
 
-        // Emit the event
-        event::emit(new_event);
-
-      // Example of creating token data (metadata) for the NFT
-      /*aptos_token::mint(
-          source_account,
-          collection_name_str,
-          string::utf8(b"Token description"), // Token description
-          token_name_str,                             
-          token_uri_str, 
-          vector<String>[string::utf8(b"given_to")],
-          vector<String>[string::utf8(b"address")],
-          vector<vector<u8>>[b""],
-      );*/
-
-    }
-
-    // Event struct to capture collection creation
-    #[event]
-    struct CollectionCreatedEvent has copy, drop, store {
-        creator: address,  // Address of the creator
-        collection_name: vector<u8>,  // Name of the collection
-        metadata_uri: vector<u8>,  // Metadata URI
-        timestamp: u64,  // Block timestamp
-    }
-
-    
+    }    
    
 
 }
