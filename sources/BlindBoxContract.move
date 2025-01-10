@@ -7,7 +7,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
-    use aptos_token;
+    use aptos_token::token;
     use supra_framework::event;
     use supra_framework::timestamp;
     use supra_framework::guid::GUID;
@@ -56,7 +56,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       let royalty_denominator = 100;
   
       // Create the collection using the new standard
-      aptos_token::create_collection(
+      token::create_collection(
           source_account,
           collection_name_str,
           description_str,
