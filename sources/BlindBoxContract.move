@@ -76,7 +76,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
     #[view]
     public fun check_collection_exists(creator: address, collection_name: vector<v8>) {
-        let exists = token::check_collection_exists(creator, string::utf8(collection_name))
+        let exists = token::check_collection_exists(creator, string::utf8(collection_name));
     }    
    
 
