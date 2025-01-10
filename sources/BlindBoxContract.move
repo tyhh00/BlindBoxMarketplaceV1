@@ -22,6 +22,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     //Event Types
 
     //Entry Functions
+    
+    // https://github.com/Entropy-Foundation/aptos-core/blob/dev/aptos-move/framework/aptos-token/sources/token.move#L1103
     public entry fun create_collection(
       source_account: &signer,
       collection_name: vector<u8>,
@@ -70,9 +72,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
           mutability_settings
 
       );
-        let account_addr = signer::address_of(source_account);
+    }
 
-        //
+    #[view]
+    public fun check_collection_exists(creator:: address, collection_name: vector<v8>) {
+        let exists = token::check_collection_exists(creator, string::utf8(collection_name))
     }    
    
 
