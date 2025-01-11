@@ -20,6 +20,13 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
     
     //Event Types
+    #[event]
+    struct CollectionCreatedEvent has copy, drop, store {
+        creator: address,  // Address of the creator
+        collection_name: vector<u8>,  // Name of the collection
+        metadata_uri: vector<u8>,  // Metadata URI
+        timestamp: u64,  // Block timestamp
+    }
 
     //Entry Functions
     
@@ -72,6 +79,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
           mutability_settings
 
       );
+
+      let account_addr = signer::address_of(source_account);
+
+      // Create the collection creation event
+      let new_event = CollectionCreatedEvent {
+            creator: account_addr,
+            collection_name: collection_name,
+            metadata_uri: collection_uri,
+            timestamp: timestamp::now_microseconds(), 
+        };
+        // Emit the event
+      event::emit(new_event);
     }
    
     
