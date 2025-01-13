@@ -111,7 +111,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       //Check if Lootboxes Table Exists for Creator, If No, Init Table.
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
-            lootbox_table: table::new<String, Lootbox>(),
+            lootbox_table: table::new<String, Lootbox<CoinType>>(),
         });
       };
       
@@ -222,7 +222,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         let collection_name_str = string::utf8(collection_name);
 
         // Fetch the lootbox
-        let lootboxes = borrow_global_mut<Lootboxes<CoinType>>(creator_addr);
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
