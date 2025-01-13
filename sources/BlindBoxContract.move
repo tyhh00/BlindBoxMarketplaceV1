@@ -5,7 +5,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use std::string::{Self, String};
     use std::error;
     use std::table;
-    use std::option::{Self, Option};
+    ///use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
@@ -48,7 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
     //Structs
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
-    struct Lootbox<CoinType> has store {
+    struct Lootbox has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
@@ -111,7 +111,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       //Check if Lootboxes Table Exists for Creator, If No, Init Table.
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
-            lootbox_table: table::new<String, Lootbox<CoinType>>(),
+            lootbox_table: table::new<String, Lootbox>(),
         });
       };
       
@@ -130,7 +130,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             price,
         };
 
-      let new_lootbox = Lootbox<CoinType> {
+      let new_lootbox = Lootbox {
         creator: account_addr,
         collectionName: collection_name_str,
 
