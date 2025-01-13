@@ -49,7 +49,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     
     struct Lootbox {
       creator: address,
-      collectionName: String; // Used to access collection by Creator + CollName in aptos_token::token
+      collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
       rarities: table::Table<String, u64>, // Map rarity name to weight
       rarity_showItemWhenRoll: table::Table<String, bool>,
