@@ -167,7 +167,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         allow_mintList: table::new<address, u64>(),
 
         //price: fixed_price_listing,
-        priceResourceAddress: lootbox_resource_account_addr;
+        priceResourceAddress: lootbox_resource_account_addr,
 
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
