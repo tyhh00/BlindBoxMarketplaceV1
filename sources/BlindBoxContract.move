@@ -142,7 +142,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         requiresKey: requiresKey,
         keysCollectionName: std::utf8(keys_collection_name),
 
-        tokensInLootbox: vector<String>,
+        tokensInLootbox: vector::empty<String>(),
       };
 
 
