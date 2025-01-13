@@ -48,7 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
     //Structs
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
-    struct Lootbox has store {
+    struct Lootbox<CoinType> has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
@@ -61,8 +61,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
-      //price: FixedPriceListing<CoinType>,
-      price: Option<FixedPriceListing<any_coin::AnyCoin>>,
+      price: FixedPriceListing<CoinType>,
+      //price: Option<FixedPriceListing<any_coin::AnyCoin>>,
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -130,7 +130,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             price,
         };
 
-      let new_lootbox = Lootbox {
+      let new_lootbox = Lootbox<CoinType> {
         creator: account_addr,
         collectionName: collection_name_str,
 
@@ -222,7 +222,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         let collection_name_str = string::utf8(collection_name);
 
         // Fetch the lootbox
-        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootboxes = borrow_global_mut<Lootboxes<CoinType>>(creator_addr);
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
