@@ -237,7 +237,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         let marketplace_cut = lootbox.price / 10; // 10%
         let creator_cut = lootbox.price - marketplace_cut; // 90%
         coin::deposit<CoinType>(creator_addr, creator_cut);
-        coin::deposit<CoinType>(@projectOwnerAdr marketplace_cut);
+        coin::deposit<CoinType>(@projectOwnerAdr, marketplace_cut);
 
         // Update lootbox state
         lootbox.stock = lootbox.stock - 1;
