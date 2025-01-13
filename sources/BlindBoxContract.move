@@ -177,7 +177,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       // Insert the new lootbox into the `lootbox_table`
       if (table::contains(&lootboxes.lootbox_table, &collection_name_str)) {
           abort error::already_exists(ELOOTBOX_EXISTS); // Custom error code indicating the lootbox already exists
-      }
+      };
 
       table::add(&mut lootboxes.lootbox_table, collection_name_str, &new_lootbox);
 
