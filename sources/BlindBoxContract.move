@@ -170,7 +170,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         price: price,
         price_coinType: price_coinType,
         timestamp: timestamp::now_microseconds(), 
-      }
+      };
       event::emit(lootbox_event);
 
       // Create the collection creation event
