@@ -136,6 +136,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
+      if (exists(source_account, lootbox_resource_account_seed)) {
+        error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS);
+      }
+
       let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
       
