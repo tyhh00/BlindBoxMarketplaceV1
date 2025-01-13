@@ -133,8 +133,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
 
       let lootbox_resource_account_seed = b"LootboxPrice::";
-      lootbox_resource_account_seed = string::append(lootbox_resource_account_seed,collection_name);
-      lootbox_resource_account_seed = string::append(lootbox_resource_account_seed,b"::BlindBoxModule");
+      append_to_vector(&mut lootbox_resource_account_seed, collection_name);
+      append_to_vector(&mut lootbox_resource_account_seed, b"BlindboxModule");
+
       let lootbox_resource_account_addr = account::create_resource_account(source_account, lootbox_resource_account_seed);
       
       // Try to borrow the global resource. If it doesn't exist, it will throw an error.
@@ -352,7 +353,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     }
     */
 
-    
+    public fun append_to_vector(v: &mut vector<u8>, element: u8) {
+        // Append the element to the vector
+        vector::push_back(v, element);
+    }
 
 
 }
