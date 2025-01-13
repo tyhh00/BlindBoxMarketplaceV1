@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1 {
+module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV2 {
     //Generic Imports
     use std::signer;
     use std::vector;
@@ -50,7 +50,6 @@ module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1 {
     fun get_resource_address(): address {
         account::create_resource_address(&@projectOwnerAdr, RESOURCE_SEED)
     }
-
 
 
     //Utils
