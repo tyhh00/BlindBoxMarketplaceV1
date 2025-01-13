@@ -146,7 +146,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             price,
         };
 
-      move_to(lootbox_resource_account_signer, fixed_price_listing);
+      move_to(&lootbox_resource_account_signer, fixed_price_listing);
 
       let new_lootbox = Lootbox {
         creator: account_addr,
