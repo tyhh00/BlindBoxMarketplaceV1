@@ -175,11 +175,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
 
       // Insert the new lootbox into the `lootbox_table`
-      if (table::contains(&lootboxes.lootbox_table, &collection_name_str)) {
+      if (table::contains(&lootboxes.lootbox_table, collection_name_str)) {
           abort error::already_exists(ELOOTBOX_EXISTS); // Custom error code indicating the lootbox already exists
       };
 
-      table::add(&mut lootboxes.lootbox_table, *collection_name_str, new_lootbox);
+      table::add(&mut lootboxes.lootbox_table, &collection_name_str, new_lootbox);
 
       //Add to lootboxes immediately dont store in let new_lootbox. So it dosent need a drop ability
       //U forgot this functionality
