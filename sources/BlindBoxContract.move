@@ -61,8 +61,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
-      price: u64, //Stored in a proper format(Need search)
-      price_coinType: CoinType, //Supra or USDC
+      price: FixedPriceListing,
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -75,10 +74,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         lootbox_table: table::Table<String, Lootbox>, // Key: collection_name
     }
 
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
+    struct FixedPriceListing<phantom CoinType> has key {
+        /// The price to purchase the item up for listing.
+        price: u64,
+    }
+
     //Entry Functions
     
     // https://github.com/Entropy-Foundation/aptos-core/blob/dev/aptos-move/framework/aptos-token/sources/token.move#L1103
-    public entry fun create_lootbox(
+    public entry fun create_lootbox<CoinType>(
       source_account: &signer,
       collection_name: vector<u8>,
       description: vector<u8>,
@@ -87,7 +92,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       initial_stock: u64,
       max_stock: u64,
       price: u64,
-      price_coinType: CoinType,
 
       requiresKey: bool,
       keys_collection_name: vector<u8>,
@@ -115,12 +119,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       let description_str = string::utf8(description);
       let collection_uri_str = string::utf8(collection_uri);
 
-
       let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
       assert!(
         !table::contains(&lootboxes.lootbox_table, &collection_name_str),
         error::already_exists(ELOOTBOX_EXISTS)
       );
+
+      let fixed_price_listing = FixedPriceListing<CoinType> {
+            price,
+        };
 
       let new_lootbox = Lootbox {
         creator: account_addr,
@@ -136,8 +143,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         whitelistMode: true,
         allow_mintList: table::new<address, u64>,
 
-        price: price,
-        price_coinType: price_coinType,
+        price: fixed_price_listing,
 
         requiresKey: requiresKey,
         keysCollectionName: std::utf8(keys_collection_name),
@@ -206,7 +212,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     }
 
     /// Purchase a lootbox
-    public entry fun purchase_lootbox(
+    public entry fun purchase_lootbox<CoinType>(
         buyer: &signer,
         creator_addr: address,
         collection_name: vector<u8>
@@ -221,7 +227,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
 
         // Check buyer's balance
-        let buyer_balance = coin::balance<CoinType>(buyer, lootbox.price_coinType);
+        let buyer_balance = coin::balance<CoinType>(buyer, lootbox.price.price);
         assert!(buyer_balance >= lootbox.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Deduct payment from the buyer
@@ -230,8 +236,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         // Distribute payment
         let marketplace_cut = lootbox.price / 10; // 10%
         let creator_cut = lootbox.price - marketplace_cut; // 90%
-        coin::deposit<CoinType>(creator_addr, lootbox.price_coin_type, creator_cut);
-        coin::deposit<CoinType>(@projectOwnerAdr, lootbox.price_coin_type, marketplace_cut);
+        coin::deposit<CoinType>(creator_addr, creator_cut);
+        coin::deposit<CoinType>(@projectOwnerAdr marketplace_cut);
 
         // Update lootbox state
         lootbox.stock = lootbox.stock - 1;
