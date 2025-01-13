@@ -107,7 +107,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
         });
-      }
+      };
       
       // Convert the vectors to strings
       let collection_name_str = string::utf8(collection_name);
@@ -144,7 +144,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         keysCollectionName: std::utf8(keys_collection_name),
 
 
-      }
+      };
 
 
       let mutability_settings = vector::empty<bool>();
