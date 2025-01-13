@@ -228,14 +228,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
         // Check buyer's balance
         let buyer_balance = coin::balance<CoinType>(buyer, lootbox.price.price);
-        assert!(buyer_balance >= lootbox.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
+        assert!(buyer_balance >= lootbox.price.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Deduct payment from the buyer
-        coin::withdraw<CoinType>(buyer, lootbox.price_coin_type, lootbox.price);
+        coin::withdraw<CoinType>(buyer, lootbox.price.price);
 
         // Distribute payment
-        let marketplace_cut = lootbox.price / 10; // 10%
-        let creator_cut = lootbox.price - marketplace_cut; // 90%
+        let marketplace_cut = lootbox.price.price / 10; // 10%
+        let creator_cut = lootbox.price.price - marketplace_cut; // 90%
         coin::deposit<CoinType>(creator_addr, creator_cut);
         coin::deposit<CoinType>(@projectOwnerAdr, marketplace_cut);
 
