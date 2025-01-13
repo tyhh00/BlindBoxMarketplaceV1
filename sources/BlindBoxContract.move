@@ -4,7 +4,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use std::vector;
     use std::string::{Self, String};
     use std::error;
-    use std::option::{Self, Option};
+    use std::table;
+    ///use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
@@ -24,8 +25,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     const ELOOTBOX_EXISTS: u64 = 6;
     const EMAX_ROLLS_REACHED: u64 = 7;
 
-    /// Market Settings
-    use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
+    // Market Settings
+    //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
     
     //Event Types
     #[event]
@@ -52,7 +53,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
       rarities: table::Table<String, u64>, // Map rarity name to weight
-      rarity_showItemWhenRoll: table::Table<String, bool>,
+      rarities_showItemWhenRoll: table::Table<String, bool>,
       
       stock: u64, //Available stock
       maxRolls: u64, //Maximum Rolls ever
@@ -113,11 +114,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       let collection_name_str = string::utf8(collection_name);
       let description_str = string::utf8(description);
       let collection_uri_str = string::utf8(collection_uri);
-      let token_name_str = string::utf8(token_name);
-      let token_uri_str = string::utf8(token_uri);
 
 
-      let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+      let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
       assert!(
         !table::contains(&lootboxes.lootbox_table, &collection_name_str),
         error::already_exists(ELOOTBOX_EXISTS)
@@ -125,7 +124,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
       let new_lootbox = Lootbox {
         creator: account_addr,
-        collection_name: collection_name_str,
+        collectionName: collection_name_str,
 
         rarities: table::new<String, u64>,
         rarities_showItemWhenRoll: table::new<String, bool>,
@@ -143,7 +142,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         requiresKey: requiresKey,
         keysCollectionName: std::utf8(keys_collection_name),
 
-
+        tokensInLootbox: vector<String>,
       };
 
 
