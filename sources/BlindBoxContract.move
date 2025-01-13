@@ -66,7 +66,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       requiresKey: bool,
       keysCollectionName: String,
       
-      tokensInLootbox:: vector<String>, //Token Data IDs involved
+      tokensInLootbox: vector<String>, //Token Data IDs involved
     }
 
     /// Table to store all lootboxes by creator and collection name
