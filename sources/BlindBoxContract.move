@@ -8,7 +8,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
-    use supra_framework::coin[Self, Coin];
+    use supra_framework::coin::[Self, Coin];
     use supra_framework::event;
     use supra_framework::timestamp;
     use supra_framework::guid::GUID;
