@@ -24,6 +24,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     const ENOT_ENOUGH_STOCK: u64 = 5;
     const ELOOTBOX_EXISTS: u64 = 6;
     const EMAX_ROLLS_REACHED: u64 = 7;
+    const ERESOURCE_FORFIXEDPRICE_EXISTS: u68 = 8;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -61,8 +62,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
-      price: FixedPriceListing<CoinType>,
-      //price: Option<FixedPriceListing<any_coin::AnyCoin>>,
+
+      priceResourceAddress: address,
+      
+      //Probably Use a resource account, the Seed is the Addr+CollectionName
+      //Store it there, the fixed price for this collection
+      //Link up the resource adr here
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -126,9 +131,27 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         error::already_exists(ELOOTBOX_EXISTS)
       );
 
+
+      let lootbox_resource_account_seed = b"LootboxPrice::"+collection_name+"::BlindBoxModule";
+      let lootbox_resource_account_addr = account::create_resource_account(source_account, lootbox_resource_account_seed);
+      
+      // Attempt to borrow the resource from the lootbox resource account
+      let res = borrow_global_optional<FixedPriceListing<CoinType>>(lootbox_resource_account_addr);
+        
+      // If the resource exists, it will be Some, otherwise it will be None. If its some, abort.
+      assert!(
+        !(match res {
+          Some(_) => true,  // Resource exists
+          None => false,    // Resource does not exist
+      }),
+      error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS);
+      )
+
       let fixed_price_listing = FixedPriceListing<CoinType> {
             price,
         };
+
+      move_to(lootbox_resource_account_addr, fixed_price_listing);
 
       let new_lootbox = Lootbox {
         creator: account_addr,
@@ -144,7 +167,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         whitelistMode: true,
         allow_mintList: table::new<address, u64>(),
 
-        price: fixed_price_listing,
+        //price: fixed_price_listing,
+        priceResourceAddress: lootbox_resource_account_addr;
 
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
@@ -217,7 +241,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         buyer: &signer,
         creator_addr: address,
         collection_name: vector<u8>
-      ) {
+      ) acquires FixedPriceListing {
         let buyer_addr = signer::address_of(buyer);
         let collection_name_str = string::utf8(collection_name);
 
@@ -227,13 +251,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
 
+        let FixedPriceListing {
+            price,
+        } = move_from<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
+
         // Check buyer's balance
         let buyer_balance = coin::balance<CoinType>(buyer_addr);
-        assert!(buyer_balance >= lootbox.price.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
+        assert!(buyer_balance >= price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Distribute payment
-        let marketplace_cut = lootbox.price.price / 10; // 10%
-        let creator_cut = lootbox.price.price - marketplace_cut; // 90%
+        let marketplace_cut = price / 10; // 10%
+        let creator_cut = price - marketplace_cut; // 90%
 
         // Deduct payment from the buyer
         let marketplace_cut_coins = coin::withdraw<CoinType>(buyer, marketplace_cut);
