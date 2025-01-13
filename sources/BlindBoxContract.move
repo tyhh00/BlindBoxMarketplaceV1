@@ -136,7 +136,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
-      let lootbox_resource_account_addr = account::create_resource_account(source_account, lootbox_resource_account_seed);
+      let lootbox_resource_account_addr = account::create_resource_account(account_addr, lootbox_resource_account_seed);
       
       // Try to borrow the global resource. If it doesn't exist, it will throw an error.
       let lootbox_resource = borrow_global<FixedPriceListing<CoinType>>(lootbox_resource_account_addr);
