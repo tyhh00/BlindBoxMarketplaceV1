@@ -103,7 +103,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       keys_collection_name: vector<u8>,
       keys_collection_description: vector<u8>,
       keys_collection_url: vector<u8>,
-    ) {
+    ) acquires Lootboxes {
       let account_addr = signer::address_of(source_account);
 
       //Check if Underlying Collection Name was used before
