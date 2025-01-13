@@ -93,6 +93,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       event::emit(new_event);
     }
    
-    
+    struct FixedPriceListing<phantom CoinType> has key {
+      /// The price to purchase the item up for listing.
+      price: u64,
+    }
+
 
 }
