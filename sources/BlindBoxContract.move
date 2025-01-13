@@ -231,7 +231,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         assert!(buyer_balance >= lootbox.price.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Deduct payment from the buyer
-        let mut coins = coin::withdraw<CoinType>(buyer, lootbox.price.price);
+        let coins = &mut coin::withdraw<CoinType>(buyer, lootbox.price.price);
 
         // Distribute payment
         let marketplace_cut = lootbox.price.price / 10; // 10%
