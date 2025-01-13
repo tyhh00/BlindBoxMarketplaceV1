@@ -25,8 +25,13 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         creator: address,  // Address of the creator
         collection_name: vector<u8>,  // Name of the collection
         metadata_uri: vector<u8>,  // Metadata URI
+        description: vector<u8>,
+        maximum: u64,
         timestamp: u64,  // Block timestamp
     }
+
+    //Structs For Lootbox Customization
+    
 
     //Entry Functions
     
@@ -87,6 +92,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             creator: account_addr,
             collection_name: collection_name,
             metadata_uri: collection_uri,
+            description: description,
+            maximum: maximum_supply,
             timestamp: timestamp::now_microseconds(), 
         };
         // Emit the event
