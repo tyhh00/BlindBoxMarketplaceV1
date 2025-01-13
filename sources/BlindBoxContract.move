@@ -47,8 +47,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     }
 
     //Structs
-    
-    struct Lootbox<CoinType> has store {
+    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
+    struct Lootbox has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
@@ -130,7 +130,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             price,
         };
 
-      let new_lootbox = Lootbox<CoinType> {
+      let new_lootbox = Lootbox {
         creator: account_addr,
         collectionName: collection_name_str,
 
