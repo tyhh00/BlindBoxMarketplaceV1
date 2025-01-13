@@ -136,7 +136,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
-      let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(account_addr, lootbox_resource_account_seed);
+      let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(lootbox_resource_account_signer);
       
       // Try to borrow the global resource. If it doesn't exist, it will throw an error.
@@ -145,7 +145,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       // If the resource exists, abort with a specific error code.
       if (lootbox_resource != 0x0) {
           // Abort the transaction if the lootbox already exists
-          assert(false, error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
+          assert!(false, error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
       };
 
       let fixed_price_listing = FixedPriceListing<CoinType> {
