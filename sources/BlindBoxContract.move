@@ -235,8 +235,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         coin::deposit<CoinType>(@projectOwnerAdr, lootbox.price_coin_type, marketplace_cut);
 
         // Update lootbox state
-        lootbox.stock -= 1;
-        lootbox.rolled += 1;
+        lootbox.stock = lootbox.stock - 1;
+        lootbox.rolled = lootbox.rolled + 1;
 
         // RNG logic placeholder
         // TODO: Implement random number generation and token assignment.
