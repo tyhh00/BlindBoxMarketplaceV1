@@ -48,7 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
     //Structs
     
-    struct Lootbox has store {
+    struct Lootbox<CoinType> has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
@@ -62,6 +62,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
       price: FixedPriceListing<CoinType>,
+      //price: Option<FixedPriceListing<any_coin::AnyCoin>>,
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -129,7 +130,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
             price,
         };
 
-      let new_lootbox = Lootbox {
+      let new_lootbox = Lootbox<CoinType> {
         creator: account_addr,
         collectionName: collection_name_str,
 
