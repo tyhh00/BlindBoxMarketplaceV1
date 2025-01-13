@@ -230,16 +230,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         let buyer_balance = coin::balance<CoinType>(buyer_addr);
         assert!(buyer_balance >= lootbox.price.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
-        // Deduct payment from the buyer
-        let coins = &mut coin::withdraw<CoinType>(buyer, lootbox.price.price);
-
         // Distribute payment
         let marketplace_cut = lootbox.price.price / 10; // 10%
         let creator_cut = lootbox.price.price - marketplace_cut; // 90%
 
-        let marketplace_extracted_coins = coin::extract<CoinType>(coins, marketplace_cut);
-        supra_account::deposit_coins(lootbox.creator, coins);
-        supra_account::deposit_coins(@projectOwnerAdr, marketplace_extracted_coins);
+        // Deduct payment from the buyer
+        let marketplace_cut_coins = coin::withdraw<CoinType>(buyer, marketplace_cut);
+        let creator_cut_coins = coin::withdraw<CoinType>(buyer, creator_cut);
+
+        supra_account::deposit_coins(lootbox.creator, creator_cut_coins);
+        supra_account::deposit_coins(@projectOwnerAdr, marketplace_cut_coins);
 
         // Update lootbox state
         lootbox.stock = lootbox.stock - 1;
