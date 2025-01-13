@@ -171,6 +171,19 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         tokensInLootbox: vector::empty<String>(),
       };
 
+          // Borrow a mutable reference to the `Lootboxes` resource
+      let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
+
+      // Insert the new lootbox into the `lootbox_table`
+      if (table::contains(&lootboxes.lootbox_table, &collection_name_str)) {
+          abort error::already_exists(ELOOTBOX_EXISTS); // Custom error code indicating the lootbox already exists
+      }
+
+      table::add(&mut lootboxes.lootbox_table, collection_name_str, &new_lootbox);
+
+      //Add to lootboxes immediately dont store in let new_lootbox. So it dosent need a drop ability
+      //U forgot this functionality
+
 
       let mutability_settings = vector::empty<bool>();
       vector::push_back(&mut mutability_settings , true); //Description
@@ -236,7 +249,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         buyer: &signer,
         creator_addr: address,
         collection_name: vector<u8>
-      ) acquires FixedPriceListing {
+      ) acquires FixedPriceListing, Lootboxes {
         let buyer_addr = signer::address_of(buyer);
         let collection_name_str = string::utf8(collection_name);
 
