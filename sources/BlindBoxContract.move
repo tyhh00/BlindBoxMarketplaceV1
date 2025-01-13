@@ -48,7 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
     //Structs
     
-    struct Lootbox {
+    struct Lootbox has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
       // ^ As good as storing the "Collection" Object because thats all we need to access it
@@ -61,7 +61,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
-      price: FixedPriceListing,
+      price: FixedPriceListing<CoinType>,
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -121,7 +121,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
       let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
       assert!(
-        !table::contains(&lootboxes.lootbox_table, &collection_name_str),
+        !table::contains(&lootboxes.lootbox_table, collection_name_str),
         error::already_exists(ELOOTBOX_EXISTS)
       );
 
@@ -133,20 +133,20 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         creator: account_addr,
         collectionName: collection_name_str,
 
-        rarities: table::new<String, u64>,
-        rarities_showItemWhenRoll: table::new<String, bool>,
+        rarities: table::new<String, u64>(),
+        rarities_showItemWhenRoll: table::new<String, bool>(),
 
         stock: initial_stock,
         maxRolls: max_stock,
         rolled: 0,
 
         whitelistMode: true,
-        allow_mintList: table::new<address, u64>,
+        allow_mintList: table::new<address, u64>(),
 
         price: fixed_price_listing,
 
         requiresKey: requiresKey,
-        keysCollectionName: std::utf8(keys_collection_name),
+        keysCollectionName: string::utf8(keys_collection_name),
 
         tokensInLootbox: vector::empty<String>(),
       };
@@ -171,9 +171,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       let lootbox_event = LootboxCreatedEvent {
         creator: account_addr,
-        collection_name: collection_name_str,
+        collection_name: collection_name,
         price: price,
-        price_coinType: price_coinType,
+        price_coinType: b"TODO: This is not done yet cuz chains dont store these info at runtime",
         timestamp: timestamp::now_microseconds(), 
       };
       event::emit(lootbox_event);
@@ -221,23 +221,25 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         let collection_name_str = string::utf8(collection_name);
 
         // Fetch the lootbox
-        let lootboxes = borrow_global<Lootboxes>(creator_addr);
-        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, &collection_name_str);
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
 
         // Check buyer's balance
-        let buyer_balance = coin::balance<CoinType>(buyer, lootbox.price.price);
+        let buyer_balance = coin::balance<CoinType>(buyer_addr);
         assert!(buyer_balance >= lootbox.price.price, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Deduct payment from the buyer
-        coin::withdraw<CoinType>(buyer, lootbox.price.price);
+        let coins = coin::withdraw<CoinType>(buyer, lootbox.price.price);
 
         // Distribute payment
         let marketplace_cut = lootbox.price.price / 10; // 10%
         let creator_cut = lootbox.price.price - marketplace_cut; // 90%
-        coin::deposit<CoinType>(creator_addr, creator_cut);
-        coin::deposit<CoinType>(@projectOwnerAdr, marketplace_cut);
+
+        let marketplace_extracted_coins = coin::extract<CoinType>(coins, marketplace_cut);
+        supra_account::deposit_coins(lootbox.creator, coins);
+        supra_account::deposit_coins(@projectOwnerAdr, marketplace_extracted_coins);
 
         // Update lootbox state
         lootbox.stock = lootbox.stock - 1;
