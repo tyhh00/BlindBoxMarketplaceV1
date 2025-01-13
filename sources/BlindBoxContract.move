@@ -136,7 +136,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
-      if (exists(source_account, lootbox_resource_account_seed)) {
+      if (exists<Account>(source_account)) {
         error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS);
       };
 
