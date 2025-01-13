@@ -24,7 +24,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     const ENOT_ENOUGH_STOCK: u64 = 5;
     const ELOOTBOX_EXISTS: u64 = 6;
     const EMAX_ROLLS_REACHED: u64 = 7;
-    const ERESOURCE_FORFIXEDPRICE_EXISTS: u68 = 8;
+    const ERESOURCE_FORFIXEDPRICE_EXISTS: u64 = 8;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -133,8 +133,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
 
 
       let lootbox_resource_account_seed = b"LootboxPrice::";
-      append_to_vector(&mut lootbox_resource_account_seed, collection_name);
-      append_to_vector(&mut lootbox_resource_account_seed, b"BlindboxModule");
+      vector::append(&mut lootbox_resource_account_seed, collection_name);
+      vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
       let lootbox_resource_account_addr = account::create_resource_account(source_account, lootbox_resource_account_seed);
       
