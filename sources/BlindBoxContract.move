@@ -75,7 +75,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     }
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
-    struct FixedPriceListing<phantom CoinType> has key {
+    struct FixedPriceListing<phantom CoinType> has key, store {
         /// The price to purchase the item up for listing.
         price: u64,
     }
@@ -173,7 +173,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
         creator: account_addr,
         collection_name: collection_name,
         price: price,
-        price_coinType: b"TODO: This is not done yet cuz chains dont store these info at runtime",
+        price_coinType: string::utf8(b"TODO: This is not done yet cuz chains dont store these info at runtime"),
         timestamp: timestamp::now_microseconds(), 
       };
       event::emit(lootbox_event);
