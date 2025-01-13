@@ -179,7 +179,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
           abort error::already_exists(ELOOTBOX_EXISTS); // Custom error code indicating the lootbox already exists
       };
 
-      table::add(&mut lootboxes.lootbox_table, collection_name_str, new_lootbox);
+      table::add(&mut lootboxes.lootbox_table, *collection_name_str, new_lootbox);
 
       //Add to lootboxes immediately dont store in let new_lootbox. So it dosent need a drop ability
       //U forgot this functionality
