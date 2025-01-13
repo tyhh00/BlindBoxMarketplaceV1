@@ -132,7 +132,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       );
 
 
-      let lootbox_resource_account_seed = b"LootboxPrice::"+collection_name+"::BlindBoxModule";
+      let lootbox_resource_account_seed = b"LootboxPrice::";
+      lootbox_resource_account_seed = string::append(lootbox_resource_account_seed,collection_name);
+      lootbox_resource_account_seed = string::append(lootbox_resource_account_seed,b"::BlindBoxModule");
       let lootbox_resource_account_addr = account::create_resource_account(source_account, lootbox_resource_account_seed);
       
       // Attempt to borrow the resource from the lootbox resource account
