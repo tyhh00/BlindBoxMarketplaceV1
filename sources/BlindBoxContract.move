@@ -48,7 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
     }
 
     //Structs
-    #[resource_group_member(group = supra_framework::object::ObjectGroup)]
+    //#[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct Lootbox has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
