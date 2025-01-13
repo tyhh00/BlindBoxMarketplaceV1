@@ -61,8 +61,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV1 {
       
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
-      price: FixedPriceListing<phantom CoinType>,
-      //price: Option<FixedPriceListing<any_coin::AnyCoin>>,
+      //price: FixedPriceListing<CoinType>,
+      price: Option<FixedPriceListing<any_coin::AnyCoin>>,
       
       requiresKey: bool,
       keysCollectionName: String,
