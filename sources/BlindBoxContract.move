@@ -318,9 +318,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         );
 
         // Set up token properties including rarity
-        let property_keys = vector::singleton(string::utf8(b"rarity"));
-        let property_values = vector::singleton(rarity);
-        let property_types = vector::singleton(string::utf8(b"String"));
+            let property_keys = vector[string::utf8(b"rarity")];
+            let property_values = vector[rarity];
+            let property_types = vector[string::utf8(b"String")];
 
 
         // Create token metadata in the collection
@@ -414,9 +414,9 @@ public entry fun modify_token_metadata(
         );
 
         // Update rarity property
-        let rarity_keys = vector::singleton(string::utf8(b"rarity"));
-        let rarity_values = vector::singleton(new_rarity);
-        let rarity_types = vector::singleton(string::utf8(b"String"));
+        let rarity_keys = vector[string::utf8(b"rarity")];
+        let rarity_values = vector[new_rarity];
+        let rarity_types = vector[string::utf8(b"String")];
 
         token::mutate_tokendata_property(
             creator,
