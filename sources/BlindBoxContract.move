@@ -256,9 +256,9 @@ public entry fun set_rarities(
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
-        // Create new tables
-        let new_rarities = table::new<String, u64>();
-        let new_rarities_show = table::new<String, bool>();
+        // Clear existing entries from tables
+        table::clear(&mut lootbox.rarities);
+        table::clear(&mut lootbox.rarities_showItemWhenRoll);
 
         // Add each rarity and its weight
         let i = 0;
@@ -267,15 +267,11 @@ public entry fun set_rarities(
             let weight = *vector::borrow(&rarity_weights, i);
             let show_item = *vector::borrow(&show_items_on_roll, i);
 
-            table::add(&mut new_rarities, rarity_name, weight);
-            table::add(&mut new_rarities_show, rarity_name, show_item);
+            table::add(&mut lootbox.rarities, rarity_name, weight);
+            table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
             
             i = i + 1;
         };
-
-        // Replace old tables with new ones
-        lootbox.rarities = new_rarities;
-        lootbox.rarities_showItemWhenRoll = new_rarities_show;
     }
 
     public entry fun add_tokenMetaData(
