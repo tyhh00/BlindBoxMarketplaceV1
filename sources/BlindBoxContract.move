@@ -5,7 +5,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     use std::string::{Self, String};
     use std::error;
     use std::table;
-    ///use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
@@ -14,6 +13,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     use supra_framework::event;
     use supra_framework::timestamp;
     use supra_framework::guid::GUID;
+    //DVRF
+    use supra_addr::supra_vrf;
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -29,6 +30,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     const EINVALID_INPUT_LENGTHS: u64 = 9;
     const EINVALID_RARITY: u64 = 10;
     const ETOKEN_NAME_ALREADY_EXISTS: u64 = 11;
+    const EALREADY_INITIALIZED: u64 = 12;
+    const EYOU_ARE_NOT_PROJECT_OWNER: u64 = 13;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -51,6 +54,45 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         timestamp: u64,
     }
 
+    #[event]
+    struct LootboxPurchaseInitiatedEvent has drop, store {
+        buyer: address,
+        creator: address,
+        collection_name: String,
+        quantity: u64,
+        nonce: u64,
+        timestamp: u64
+    }
+
+    #[event]
+    struct LootboxRewardDistributedEvent has drop, store {
+        nonce: u64,
+        buyer: address,
+        creator: address,
+        collection_name: String,
+        selected_token: String,
+        selected_rarity: String,
+        random_number: u64,
+        timestamp: u64
+    }
+
+    #[event]
+    struct VRFCallbackReceivedEvent has drop, store {
+        nonce: u64,
+        caller_address: address,
+        random_numbers: vector<u64>,
+        timestamp: u64
+    }
+
+    // Add event handle to PendingRewards struct
+    struct PendingRewards has key {
+        rewards: table::Table<u64, PendingReward>,
+        next_nonce: u64,
+        purchase_events: event::EventHandle<LootboxPurchaseInitiated>,
+        distribution_events: event::EventHandle<LootboxRewardDistributed>,
+        vrf_callback_events: event::EventHandle<VRFCallbackReceived>
+    }
+
     //Structs
     //#[resource_group_member(group = supra_framework::object::ObjectGroup)]
     struct Lootbox has store {
@@ -67,11 +109,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
       whitelistMode: bool,
       allow_mintList: table::Table<address, u64>,
 
+      //FixedPriceListing with CoinType
       priceResourceAddress: address,
-      
-      //Probably Use a resource account, the Seed is the Addr+CollectionName
-      //Store it there, the fixed price for this collection
-      //Link up the resource adr here
       
       requiresKey: bool,
       keysCollectionName: String,
@@ -91,9 +130,47 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         price: u64,
     }
 
+    //DVRF SIgner Resource
+    struct ResourceInfo has key {
+      signer_cap: account::SignerCapability
+    }
+
+    //Reward Structs
+    struct PendingReward has store {
+      buyer: address,
+      creator: address,
+      collection_name: String,
+      quantity: u64,
+      nonce: u64,  // Link to the VRF request
+    }
+
+    // Global storage for pending rewards
+    struct PendingRewards has key {
+      rewards: table::Table<u64, PendingReward>,  // nonce -> PendingReward
+      next_nonce: u64,  // Track the next nonce we expect
+    }
+
     //Entry Functions
-    
-    // https://github.com/Entropy-Foundation/aptos-core/blob/dev/aptos-move/framework/aptos-token/sources/token.move#L1103
+    // Initialize the pending rewards storage
+    fun init_module(publisher: &signer) {
+        assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
+        assert!(!exists<PendingRewards>(publisher), error::already_exists(EALREADY_INITIALIZED));
+
+        // Create resource account with a seed
+        let (resource_signer, signer_cap) = account::create_resource_account(publisher, b"LOOTBOX_RESOURCE");
+        
+        // Store signer capability
+        move_to(publisher, ResourceInfo {
+            signer_cap: signer_cap
+        });
+        
+        //initialize pending rewards
+        move_to(publisher, PendingRewards {
+            rewards: table::new(),
+            next_nonce: 0,
+        });
+    }
+        
     public entry fun create_lootbox<CoinType>(
       source_account: &signer,
       collection_name: vector<u8>,
@@ -501,8 +578,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     public entry fun purchase_lootbox<CoinType>(
         buyer: &signer,
         creator_addr: address,
-        collection_name: vector<u8>
-      ) acquires FixedPriceListing, Lootboxes {
+        collection_name: vector<u8>,
+      ) acquires FixedPriceListing, Lootboxes, PendingRewards {
         let buyer_addr = signer::address_of(buyer);
         let collection_name_str = string::utf8(collection_name);
 
@@ -535,15 +612,133 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         lootbox.stock = lootbox.stock - 1;
         lootbox.rolled = lootbox.rolled + 1;
 
-        // RNG logic placeholder
-        // TODO: Implement random number generation and token assignment.
+        let buyer_addr = signer::address_of(buyer);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Request VRF
+        let callback_address = @projectOwnerAdr;
+        let callback_module = string::utf8(b"BlindBoxContract_Crystara_TestV5");
+        let callback_function = string::utf8(b"receive_dvrf");
+        
+        let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
+        let nonce = supra_vrf::rng_request(
+            buyer, 
+            callback_address, 
+            callback_module, 
+            callback_function, 
+            1,  // rng_count 
+            client_seed,
+            1   // num_confirmations
+        );
+
+        // Store pending reward
+        let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
+        let pending_reward = PendingReward {
+            buyer: buyer_addr,
+            creator: creator_addr,
+            collection_name: collection_name_str,
+            1, //quantity
+            nonce,
+        };
+
+        // Add to pending rewards
+        table::add(&mut pending_rewards.rewards, nonce, pending_reward);
+
+        // Emit purchase event
+        event::emit(
+            LootboxPurchaseInitiatedEvent {
+                buyer: buyer_addr,
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                quantity,
+                nonce,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
     }
 
-  
+    // Callback function for VRF
+    public entry fun receive_dvrf(
+      nonce: u64,
+      message: vector<u8>,
+      signature: vector<u8>,
+      caller_address: address,
+      rng_count: u8,
+      client_seed: u64,
+    ) acquires PendingRewards, Lootboxes {
+        // Verify VRF result
+        let random_numbers = supra_vrf::verify_callback(
+            nonce, 
+            message, 
+            signature, 
+            caller_address, 
+            rng_count, 
+            client_seed
+        );
 
-    public fun append_to_vector(v: &mut vector<u8>, element: u8) {
-        // Append the element to the vector
-        vector::push_back(v, element);
+        // Emit VRF callback event
+        event::emit(
+            VRFCallbackReceivedEvent {
+                nonce,
+                caller_address,
+                random_numbers: random_numbers,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+
+        // Get pending reward
+        let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
+        let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
+
+        // Get lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(pending_reward.creator);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, pending_reward.collection_name);
+
+        // Use random number to select rarity and token
+        let random_num = *vector::borrow(&random_numbers, 0);
+        
+        // Select rarity based on weights
+        let selected_rarity = select_rarity(lootbox, random_num);
+        
+        // Get tokens of that rarity
+        let tokens_of_rarity = get_tokens_by_rarity(lootbox, selected_rarity);
+        
+        // Select random token from that rarity
+        let token_index = random_num % vector::length(&tokens_of_rarity);
+        let selected_token = *vector::borrow(&tokens_of_rarity, token_index);
+
+        // Get resource signer
+        let resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
+        let resource_signer = account::create_signer_with_capability(&resource_info.signer_cap);
+
+        // Create token data id
+        let token_data_id = token::create_token_data_id(
+            pending_reward.creator,
+            pending_reward.collection_name,
+            selected_token
+        );
+
+        // Mint token to buyer
+        token::mint_token(
+            &resource_signer,
+            token_data_id,
+            1  // amount
+        );
+
+        // Emit distribution event
+        event::emit(
+            LootboxRewardDistributedEvent {
+                nonce,
+                buyer: pending_reward.buyer,
+                creator: pending_reward.creator,
+                collection_name: pending_reward.collection_name,
+                selected_token: selected_token,
+                selected_rarity: selected_rarity,
+                random_number: *vector::borrow(&random_numbers, 0),
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+
     }
 
 

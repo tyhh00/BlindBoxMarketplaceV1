@@ -1,0 +1,151 @@
+Directory structure:
+└── entropy-foundation-vrf-interface/
+    ├── README.md
+    ├── aptos/
+    │   ├── mainnet/
+    │   │   ├── Move.toml
+    │   │   └── sources/
+    │   │       └── supra_vrf.move
+    │   └── testnet/
+    │       ├── Move.toml
+    │       └── sources/
+    │           └── supra_vrf.move
+    └── supra/
+        └── testnet/
+            ├── Move.toml
+            └── sources/
+                └── supra_vrf.move
+
+================================================
+File: README.md
+================================================
+# vrf-interface
+
+================================================
+File: aptos/mainnet/Move.toml
+================================================
+[package]
+name = 'SupraVrf'
+version = '1.0.0'
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "4cb85bc832b57acb26a627182163be6de2f9d83f" }
+
+[addresses]
+supra_addr = "0x6896f544985677e50aa1a6ee172812f26369da6a064d6ed9f3bfd4080c4ba8f1"
+
+
+================================================
+File: aptos/mainnet/sources/supra_vrf.move
+================================================
+module supra_addr::supra_vrf {
+    use std::string::String;
+
+    native public fun rng_request(
+        _sender: &signer, // caller signer
+        _callback_address: address, // callback address
+        _callback_module: String, // callback module name
+        _callback_function: String, // callback function name
+        _rng_count: u8, // how many random number you wants to generate
+        _client_seed: u64, // using as seed to generate random. defualt pass "0", if you don't want to use
+        _num_confirmations: u64, // how many confirmations you require for random number. default pass 1, if you don't want to use
+    ): u64;
+
+    native public fun verify_callback(
+        _nonce: u64,
+        _message: vector<u8>,
+        _signature: vector<u8>,
+        _caller_address: address,
+        _rng_count: u8,
+        _client_seed: u64,
+    ): vector<u64>;
+
+}
+
+
+================================================
+File: aptos/testnet/Move.toml
+================================================
+[package]
+name = 'SupraVrf'
+version = '1.0.0'
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "4cb85bc832b57acb26a627182163be6de2f9d83f" }
+
+[addresses]
+supra_addr = "0x186ba2ba88f4a14ca51f6ce42702c7ebdf6bfcf738d897cc98b986ded6f1219e"
+
+
+================================================
+File: aptos/testnet/sources/supra_vrf.move
+================================================
+module supra_addr::supra_vrf {
+    use std::string::String;
+
+    native public fun rng_request(
+        _sender: &signer, // caller signer
+        _callback_address: address, // callback address
+        _callback_module: String, // callback module name
+        _callback_function: String, // callback function name
+        _rng_count: u8, // how many random number you wants to generate
+        _client_seed: u64, // using as seed to generate random. defualt pass "0", if you don't want to use
+        _num_confirmations: u64, // how many confirmations you require for random number. default pass 1, if you don't want to use
+    ): u64;
+
+    native public fun verify_callback(
+        _nonce: u64,
+        _message: vector<u8>,
+        _signature: vector<u8>,
+        _caller_address: address,
+        _rng_count: u8,
+        _client_seed: u64,
+    ): vector<u64>;
+
+}
+
+
+================================================
+File: supra/testnet/Move.toml
+================================================
+[package]
+name = 'SupraVrf'
+version = '1.0.0'
+
+[dependencies.SupraFramework]
+git = 'https://github.com/Entropy-Foundation/aptos-core.git'
+subdir = 'aptos-move/framework/supra-framework'
+rev = 'aptosvm-v1.16_supra-v1.1.2'
+
+[addresses]
+supra_addr = "0x186ba2ba88f4a14ca51f6ce42702c7ebdf6bfcf738d897cc98b986ded6f1219e"
+
+
+================================================
+File: supra/testnet/sources/supra_vrf.move
+================================================
+module supra_addr::supra_vrf {
+    use std::string::String;
+
+    native public fun rng_request(
+        _sender: &signer, // caller signer
+        _callback_address: address, // callback address
+        _callback_module: String, // callback module name
+        _callback_function: String, // callback function name
+        _rng_count: u8, // how many random number you wants to generate
+        _client_seed: u64, // using as seed to generate random. defualt pass "0", if you don't want to use
+        _num_confirmations: u64, // how many confirmations you require for random number. default pass 1, if you don't want to use
+    ): u64;
+
+    native public fun verify_callback(
+        _nonce: u64,
+        _message: vector<u8>,
+        _signature: vector<u8>,
+        _caller_address: address,
+        _rng_count: u8,
+        _client_seed: u64,
+    ): vector<u256>;
+
+}
+
+
