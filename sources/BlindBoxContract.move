@@ -234,9 +234,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
 public entry fun set_rarities(
     collection_owner: &signer,
     lootbox_name: vector<u8>,
-    rarity_names: vector<vector<u8>>,     // e.g., ["common", "rare", "legendary"]
-    rarity_weights: vector<u64>,          // e.g., [70, 25, 5]
-    show_items_on_roll: vector<bool>      // whether to show items of this rarity when rolled
+    rarity_names: vector<vector<u8>>,
+    rarity_weights: vector<u64>,
+    show_items_on_roll: vector<bool>
     ) acquires Lootboxes {
         let owner_addr = signer::address_of(collection_owner);
         let lootbox_name_str = string::utf8(lootbox_name);
@@ -256,11 +256,20 @@ public entry fun set_rarities(
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
-        // Clear existing entries from tables
-        table::clear(&mut lootbox.rarities);
-        table::clear(&mut lootbox.rarities_showItemWhenRoll);
+        // Remove existing entries if they exist
+        let existing_keys = table::keys(&lootbox.rarities);
+        let i = 0;
+        let key_len = vector::length(&existing_keys);
+        while (i < key_len) {
+            let key = vector::borrow(&existing_keys, i);
+            if (table::contains(&lootbox.rarities, *key)) {
+                table::remove(&mut lootbox.rarities, *key);
+                table::remove(&mut lootbox.rarities_showItemWhenRoll, *key);
+            };
+            i = i + 1;
+        };
 
-        // Add each rarity and its weight
+        // Add new entries
         let i = 0;
         while (i < len) {
             let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
