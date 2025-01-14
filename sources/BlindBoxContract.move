@@ -132,7 +132,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
       );
 
 
-      let lootbox_resource_account_seed = b"LootboxPrice::";
+      let mut lootbox_resource_account_seed = vector::empty<u8>(); 
+      vector::append(&mut lootbox_resource_account_seed, b"Lootbox");
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
