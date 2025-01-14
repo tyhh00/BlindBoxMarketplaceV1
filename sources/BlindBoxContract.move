@@ -364,11 +364,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
               token_name
           );
           
-          // Get the rarity property of the token
-          let token_rarity = token::get_property_value(
-              &token_data_id,
-              &string::utf8(b"rarity")
-          );
+          // Get the token's properties
+          let token_properties = token::get_tokendata_property_map(token_data_id);
+          let token_rarity = property_map::read_string(&token_properties, &string::utf8(b"rarity"));
           
           // If token has matching rarity, add its name to our result vector
           if (token_rarity == rarity) {
