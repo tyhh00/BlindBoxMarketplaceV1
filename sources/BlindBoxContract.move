@@ -318,9 +318,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         );
 
         // Set up token properties including rarity
-        let property_keys = vector[string::utf8(b"rarity")];
-        let property_types = vector[string::utf8(b"String")];
-        let property_values = vector[rarity];  // Store rarity as a property
+        let property_keys = vector::singleton(string::utf8(b"rarity"));
+        let property_values = vector::singleton(rarity);
+        let property_types = vector::singleton(string::utf8(b"String"));
+
 
         // Create token metadata in the collection
         token::create_token_script(
@@ -413,12 +414,16 @@ public entry fun modify_token_metadata(
         );
 
         // Update rarity property
+        let rarity_keys = vector::singleton(string::utf8(b"rarity"));
+        let rarity_values = vector::singleton(new_rarity);
+        let rarity_types = vector::singleton(string::utf8(b"String"));
+
         token::mutate_tokendata_property(
             creator,
             token_data_id,
-            string::utf8(b"rarity"),
-            string::utf8(b"String"),
-            new_rarity
+            rarity_keys,
+            rarity_types,
+            rarity_values
         );
     };
 
@@ -441,22 +446,14 @@ public entry fun modify_token_metadata(
     };
 
     // Modify other properties if provided
-    let property_len = vector::length(&property_keys);
-    let i = 0;
-    while (i < property_len) {
-        let key = *vector::borrow(&property_keys, i);
-        let type = *vector::borrow(&property_types, i);
-        let value = *vector::borrow(&property_values, i);
-
+    if (vector::length(&property_keys) > 0) {
         token::mutate_tokendata_property(
             creator,
             token_data_id,
-            key,
-            type,
-            value
+            property_keys,
+            property_types,
+            property_values
         );
-        
-        i = i + 1;
     };
 }
 
