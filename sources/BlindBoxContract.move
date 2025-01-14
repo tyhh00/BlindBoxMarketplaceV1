@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     
     use std::signer;
     use std::vector;
