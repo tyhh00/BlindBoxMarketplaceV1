@@ -79,10 +79,30 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
     }
 
     #[event]
+    struct RaritiesSetEvent has drop, store {
+      creator: address,
+      collection_name: String,
+      rarity_names: vector<String>,
+      weights: vector<u64>,
+      timestamp: u64
+    }
+
+    #[event]
     struct VRFCallbackReceivedEvent has drop, store {
         nonce: u64,
         caller_address: address,
         random_numbers: vector<u256>,
+        timestamp: u64
+    }
+
+    #[event]
+    struct TokenAddedEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        token_name: String,
+        token_uri: String,
+        rarity: String,
+        max_supply: u64,
         timestamp: u64
     }
 
@@ -355,6 +375,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
             
             i = i + 1;
         };
+
+        // Emit event
+        event::emit(
+            RaritiesSetEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                rarity_names: rarity_names_str,
+                weights: weights,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
     }
 
   //Add Token To Lootbox
@@ -423,6 +454,21 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         // Store token data id only
         vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
         table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
+
+
+        let token_uri_str = string::utf8(token_uri);
+        // Emit event
+        event::emit(
+            TokenAddedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                token_name: token_name_str,
+                token_uri: token_uri_str,
+                rarity: rarity_str,
+                max_supply,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
     }
 
   fun generate_token_name(id: u64): String {
