@@ -75,7 +75,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
       requiresKey: bool,
       keysCollectionName: String,
       
-      tokensInLootbox: vector<String>, //Token Data IDs involved
+      tokensInLootbox: vector<String>, //Token names
     }
 
     /// Table to store all lootboxes by creator and collection name
@@ -342,120 +342,127 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         );
 
         // Store token data id only
-        vector::push_back(&mut lootbox.tokensInLootbox, token_data_id);
+        vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
     }
 
   // Helper function to get all tokens of a specific rarity
   fun get_tokens_by_rarity(
-    lootbox: &Lootbox,
-    rarity: String
+      lootbox: &Lootbox,
+      rarity: String
     ): vector<String> {
-        let tokens_of_rarity = vector::empty<String>();
-        let i = 0;
-        let len = vector::length(&lootbox.tokensInLootbox);
-        
-        while (i < len) {
-            let token_id = *vector::borrow(&lootbox.tokensInLootbox, i);
-            
-            // Get the rarity property of the token
-            let token_rarity = token::get_property_value(
-                &token_id,
-                &string::utf8(b"rarity")
-            );
-            
-            // If token has matching rarity, add it to our result vector
-            if (token_rarity == rarity) {
-                vector::push_back(&mut tokens_of_rarity, token_id);
-            };
-            
-            i = i + 1;
-        };
-        
-        tokens_of_rarity
+      let tokens_of_rarity = vector::empty<String>();
+      let i = 0;
+      let len = vector::length(&lootbox.tokensInLootbox);
+      
+      while (i < len) {
+          let token_name = *vector::borrow(&lootbox.tokensInLootbox, i);
+          
+          // Create token_data_id from components
+          let token_data_id = token::create_token_data_id(
+              lootbox.creator,
+              lootbox.collectionName,
+              token_name
+          );
+          
+          // Get the rarity property of the token
+          let token_rarity = token::get_property_value(
+              &token_data_id,
+              &string::utf8(b"rarity")
+          );
+          
+          // If token has matching rarity, add its name to our result vector
+          if (token_rarity == rarity) {
+              vector::push_back(&mut tokens_of_rarity, token_name);
+          };
+          
+          i = i + 1;
+      };
+    
+    tokens_of_rarity
     }
 
     //TODO Modify Token Metadata by ID
-public entry fun modify_token_metadata(
-    creator: &signer,
-    collection_name: vector<u8>,
-    token_name: vector<u8>,
-    new_uri: vector<u8>,
-    new_description: vector<u8>,
-    new_rarity: vector<u8>,
-    // For other properties
-    property_keys: vector<String>,
-    property_types: vector<String>,
-    property_values: vector<vector<u8>>
-) acquires Lootboxes {
-    let creator_addr = signer::address_of(creator);
-    let collection_name_str = string::utf8(collection_name);
-    let token_name_str = string::utf8(token_name);
-    
-    // Get the lootbox to verify ownership
-    let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
-    let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
-    
-    // Verify the signer is the creator
-    assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+    public entry fun modify_token_metadata(
+      creator: &signer,
+      collection_name: vector<u8>,
+      token_name: vector<u8>,
+      new_uri: vector<u8>,
+      new_description: vector<u8>,
+      new_rarity: vector<u8>,
+      // For other properties
+      property_keys: vector<String>,
+      property_types: vector<String>,
+      property_values: vector<vector<u8>>
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let token_name_str = string::utf8(token_name);
+        
+        // Get the lootbox to verify ownership
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
-    // Get token data id
-    let token_data_id = token::create_token_data_id(
-        creator_addr,
-        collection_name_str,
-        token_name_str
-    );
-
-    // If changing rarity, verify the new rarity exists in lootbox configuration
-    if (vector::length(&new_rarity) > 0) {
-        let new_rarity_str = string::utf8(new_rarity);
-        assert!(
-            table::contains(&lootbox.rarities, new_rarity_str),
-            error::invalid_argument(EINVALID_RARITY)
+        // Get token data id
+        let token_data_id = token::create_token_data_id(
+            creator_addr,
+            collection_name_str,
+            token_name_str
         );
 
-        // Update rarity property
-        let rarity_keys = vector[string::utf8(b"rarity")];
-        let rarity_values = vector[new_rarity];
-        let rarity_types = vector[string::utf8(b"String")];
+        // If changing rarity, verify the new rarity exists in lootbox configuration
+        if (vector::length(&new_rarity) > 0) {
+            let new_rarity_str = string::utf8(new_rarity);
+            assert!(
+                table::contains(&lootbox.rarities, new_rarity_str),
+                error::invalid_argument(EINVALID_RARITY)
+            );
 
-        token::mutate_tokendata_property(
-            creator,
-            token_data_id,
-            rarity_keys,
-            rarity_values,
-            rarity_types,
-        );
-    };
+            // Update rarity property
+            let rarity_keys = vector[string::utf8(b"rarity")];
+            let rarity_values = vector[new_rarity];
+            let rarity_types = vector[string::utf8(b"String")];
 
-    // Modify URI if provided
-    if (vector::length(&new_uri) > 0) {
-        token::mutate_tokendata_uri(
-            creator,
-            token_data_id,
-            string::utf8(new_uri)
-        );
-    };
+            token::mutate_tokendata_property(
+                creator,
+                token_data_id,
+                rarity_keys,
+                rarity_values,
+                rarity_types,
+            );
+        };
 
-    // Modify description if provided
-    if (vector::length(&new_description) > 0) {
-        token::mutate_tokendata_description(
-            creator,
-            token_data_id,
-            string::utf8(new_description)
-        );
-    };
+        // Modify URI if provided
+        if (vector::length(&new_uri) > 0) {
+            token::mutate_tokendata_uri(
+                creator,
+                token_data_id,
+                string::utf8(new_uri)
+            );
+        };
 
-    // Modify other properties if provided
-    if (vector::length(&property_keys) > 0) {
-        token::mutate_tokendata_property(
-            creator,
-            token_data_id,
-            property_keys,
-            property_values,
-            property_types,
-        );
-    };
-}
+        // Modify description if provided
+        if (vector::length(&new_description) > 0) {
+            token::mutate_tokendata_description(
+                creator,
+                token_data_id,
+                string::utf8(new_description)
+            );
+        };
+
+        // Modify other properties if provided
+        if (vector::length(&property_keys) > 0) {
+            token::mutate_tokendata_property(
+                creator,
+                token_data_id,
+                property_keys,
+                property_values,
+                property_types,
+            );
+        };
+    }
 
 
     /// Purchase a lootbox
