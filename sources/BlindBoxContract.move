@@ -77,6 +77,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
       keysCollectionName: String,
       
       tokensInLootbox: vector<String>, //Token names
+      token_rarity_mapping: table::Table<String, String>, // Map token_name to rarity
     }
 
     /// Table to store all lootboxes by creator and collection name
@@ -344,6 +345,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
 
         // Store token data id only
         vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
+        table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
     }
 
   // Helper function to get all tokens of a specific rarity
@@ -357,17 +359,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
       
       while (i < len) {
           let token_name = *vector::borrow(&lootbox.tokensInLootbox, i);
-          
-          // Create token_data_id from components
-          let token_data_id = token::create_token_data_id(
-              lootbox.creator,
-              lootbox.collectionName,
-              token_name
-          );
-          
-          // Get the token's properties
-          let token_properties = token::get_property_map(token_data_id);
-          let token_rarity = property_map::read_string(&token_properties, &string::utf8(b"rarity"));
+          let token_rarity = *table::borrow(&lootbox.token_rarity_mapping, token_name);
           
           // If token has matching rarity, add its name to our result vector
           if (token_rarity == rarity) {
