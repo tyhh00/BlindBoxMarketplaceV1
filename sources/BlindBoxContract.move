@@ -381,7 +381,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
             RaritiesSetEvent {
                 creator: owner_addr,
                 collection_name: lootbox_name_str,
-                rarity_names: rarity_keys,
+                rarity_names: lootbox.rarity_keys,
                 weights: rarity_weights,
                 timestamp: timestamp::now_microseconds()
             }
