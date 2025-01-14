@@ -32,6 +32,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     const ETOKEN_NAME_ALREADY_EXISTS: u64 = 11;
     const EALREADY_INITIALIZED: u64 = 12;
     const EYOU_ARE_NOT_PROJECT_OWNER: u64 = 13;
+    const EINVALID_VECTOR_LENGTH: u64 = 14;  // Empty vectors or invalid lengths
+    const EUNSAFE_NUMBER_CONVERSION: u64 = 15; // Overflow or unsafe conversion
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -80,7 +82,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     struct VRFCallbackReceivedEvent has drop, store {
         nonce: u64,
         caller_address: address,
-        random_numbers: vector<u64>,
+        random_numbers: vector<u256>,
         timestamp: u64
     }
 
@@ -141,17 +143,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
       nonce: u64,  // Link to the VRF request
     }
 
-    // Global storage for pending rewards
-    struct PendingRewards has key {
-      rewards: table::Table<u64, PendingReward>,  // nonce -> PendingReward
-      next_nonce: u64,  // Track the next nonce we expect
-    }
-
     //Entry Functions
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        assert!(!exists<PendingRewards>(publisher), error::already_exists(EALREADY_INITIALIZED));
+        assert!(!exists<PendingRewards>(signer::address_of(publisher)), error::already_exists(EALREADY_INITIALIZED));
 
         // Create resource account with a seed
         let (resource_signer, signer_cap) = account::create_resource_account(publisher, b"LOOTBOX_RESOURCE");
@@ -673,6 +669,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
             client_seed
         );
 
+        // Verify we got at least one random number
+        assert!(vector::length(&random_numbers) > 0, error::invalid_argument(EINVALID_VECTOR_LENGTH));
+
         // Emit VRF callback event
         event::emit(
             VRFCallbackReceivedEvent {
@@ -701,8 +700,22 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         let tokens_of_rarity = get_tokens_by_rarity(lootbox, selected_rarity);
         
         // Select random token from that rarity
-        let token_index = random_num % vector::length(&tokens_of_rarity);
-        let selected_token = *vector::borrow(&tokens_of_rarity, token_index);
+        let len = vector::length(&tokens_of_rarity);
+    
+        // Verify we have tokens to select from
+        assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
+        
+        // Safe conversion: len is guaranteed to fit in u256
+        let len_u256 = (len as u256);
+        
+        // Calculate token index using full u256 randomness
+        let token_index = random_num % len_u256;
+        
+        // Safe conversion back to u64: guaranteed to be less than len
+        let token_index_u64 = (token_index as u64);
+        assert!(token_index_u64 < len, error::invalid_state(EUNSAFE_NUMBER_CONVERSION));
+        
+        let selected_token = *vector::borrow(&tokens_of_rarity, token_index_u64);
 
         // Get resource signer
         let resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
@@ -738,5 +751,32 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
 
     }
 
+    // Helper function to select rarity based on weights
+    fun select_rarity(lootbox: &Lootbox, random_num: u256): String {
+        let total_weight = (0 as u256);
+        let rarities_vec = table::keys(&lootbox.rarities);
+        let weights_vec = table::values(&lootbox.rarities);
+        
+        let i = 0;
+        let len = vector::length(&rarities_vec);
+        while (i < len) {
+            total_weight = total_weight + (*vector::borrow(&weights_vec, i) as u256);
+            i = i + 1;
+        };
+
+        let roll = random_num % total_weight;
+        let current_weight = (0 as u256);
+        
+        i = 0;
+        while (i < len) {
+            current_weight = current_weight + (*vector::borrow(&weights_vec, i) as u256);
+            if (roll < current_weight) {
+                return *vector::borrow(&rarities_vec, i)
+            };
+            i = i + 1;
+        };
+
+        *vector::borrow(&rarities_vec, len - 1) // Fallback to last rarity
+}
 
 }
