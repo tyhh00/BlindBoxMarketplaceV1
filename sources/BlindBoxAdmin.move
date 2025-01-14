@@ -36,7 +36,7 @@ module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV2 {
     fun init_module(owner_signer: &signer) {
         assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
         
-        let address_ofSigner = signer::address_of(owner_singer);
+        let address_ofSigner = signer::address_of(owner_signer);
         let resource_address = account::create_resource_address(&address_ofSigner, RESOURCE_SEED);
         assert!(!account::exists_at(resource_address), error::already_exists(EMARKETPLACE_RESORUCE_EXISTS));
       
