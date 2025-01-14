@@ -754,39 +754,45 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     // Helper function to select rarity based on weights
     fun select_rarity(lootbox: &Lootbox, random_num: u256): String {
         let total_weight = (0 as u256);
-        
-        // Get iterator for the table
         let rarities = &lootbox.rarities;
-        let iter = table::iter(rarities);
         
-        // First pass: calculate total weight
-        while (table::next(&mut iter)) {
-            let (_, weight) = table::borrow(&lootbox.rarities, iter.key);
-            total_weight = total_weight + (*weight as u256);
+        // Create vector of rarity keys at runtime
+        let rarity_keys = vector::empty<String>();
+        let i = 0;
+        let size = table::length(rarities);
+        
+        // First pass: collect all keys and calculate total weight
+        while (i < size) {
+            if (table::contains(rarities, i)) {
+                let rarity = table::borrow(rarities, i);
+                vector::push_back(&mut rarity_keys, *rarity);
+                let weight = table::borrow(rarities, rarity);
+                total_weight = total_weight + (*weight as u256);
+            };
+            i = i + 1;
         };
         
-        // Ensure total_weight is not zero
-        assert!(total_weight > 0, error::invalid_state(EUNSAFE_NUMBER_CONVERSION));
-
+        let len = vector::length(&rarity_keys);
+        assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
+        
+        // Use random number to select rarity
         let roll = random_num % total_weight;
         let current_weight = (0 as u256);
         
-        // Second pass: find the selected rarity
-        let iter = table::iter(rarities);
-        while (table::next(&mut iter)) {
-            let (rarity, weight) = table::borrow(&lootbox.rarities, iter.key);
+        i = 0;
+        while (i < len) {
+            let rarity = vector::borrow(&rarity_keys, i);
+            let weight = table::borrow(rarities, rarity);
             current_weight = current_weight + (*weight as u256);
             
             if (roll < current_weight) {
                 return *rarity
             };
+            i = i + 1;
         };
 
-        // Should never reach here due to our checks, but provide fallback
-        let iter = table::iter(rarities);
-        assert!(table::next(&mut iter), error::invalid_state(EINVALID_VECTOR_LENGTH));
-        let (rarity, _) = table::borrow(&lootbox.rarities, iter.key);
-        *rarity
+        // Fallback to last rarity
+        *vector::borrow(&rarity_keys, len - 1)
     }
 
 }
