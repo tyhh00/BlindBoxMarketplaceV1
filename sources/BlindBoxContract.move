@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV3 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
     
     use std::signer;
     use std::vector;
@@ -26,6 +26,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV3 {
     const EMAX_ROLLS_REACHED: u64 = 7;
     const ERESOURCE_FORFIXEDPRICE_EXISTS: u64 = 8;
     const EINVALID_INPUT_LENGTHS: u64 = 9;
+    const ETOKEN_NAME_ALREADY_EXISTS: u64 = 11;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -226,12 +227,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV3 {
 
 
 
-public entry fun set_rarities(
-    collection_owner: &signer,
-    lootbox_name: vector<u8>,
-    rarity_names: vector<vector<u8>>,
-    rarity_weights: vector<u64>,
-    show_items_on_roll: vector<bool>
+    public entry fun set_rarities(
+      collection_owner: &signer,
+      lootbox_name: vector<u8>,
+      rarity_names: vector<vector<u8>>,
+      rarity_weights: vector<u64>,
+      show_items_on_roll: vector<bool>
     ) acquires Lootboxes {
         let owner_addr = signer::address_of(collection_owner);
         let lootbox_name_str = string::utf8(lootbox_name);
@@ -276,17 +277,187 @@ public entry fun set_rarities(
         };
     }
 
-    public entry fun add_tokenMetaData(
+  //Add Token To Lootbox
+    public entry fun add_token_to_lootbox(
+      creator: &signer,
+      collection_name: vector<u8>,
+      token_name: vector<u8>,
+      token_uri: vector<u8>,
+      metadata_uri: vector<u8>,
+      rarity: vector<u8>,
+      max_supply: u64
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let token_name_str = string::utf8(token_name);
 
-    ){
+        // Check if token with this name already exists
+        let token_data_id = token::create_token_data_id(
+            creator_addr,
+            collection_name_str,
+            token_name_str
+        );
+        assert!(
+            !token::check_tokendata_exists(creator_addr, collection_name_str, token_name_str),
+            error::already_exists(ETOKEN_NAME_ALREADY_EXISTS)
+        );
+        
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+        
+        // Verify rarity exists in lootbox configuration
+        let rarity_str = string::utf8(rarity);
+        assert!(
+            table::contains(&lootbox.rarities, rarity_str),
+            error::invalid_argument(EINVALID_RARITY)
+        );
 
+        // Set up token properties including rarity
+        let property_keys = vector[string::utf8(b"rarity")];
+        let property_types = vector[string::utf8(b"String")];
+        let property_values = vector[rarity];  // Store rarity as a property
+
+        // Create token metadata in the collection
+        let token_data_id = token::create_token_script(
+            creator,
+            collection_name_str,
+            string::utf8(token_name),
+            string::utf8(b""),
+            max_supply,
+            string::utf8(token_uri),
+            creator_addr,
+            100,
+            5,
+            vector[false, true, true, true, true],
+            property_keys,
+            property_types,
+            property_values
+        );
+
+        // Store token data id only
+        vector::push_back(&mut lootbox.tokensInLootbox, token_data_id);
     }
 
-    public entry fun modify_tokenMetaData(
-      tokenId: vector<u8>,
-    ){
-
+  // Helper function to get all tokens of a specific rarity
+  fun get_tokens_by_rarity(
+    lootbox: &Lootbox,
+    rarity: String
+    ): vector<String> {
+        let tokens_of_rarity = vector::empty<String>();
+        let i = 0;
+        let len = vector::length(&lootbox.tokensInLootbox);
+        
+        while (i < len) {
+            let token_id = *vector::borrow(&lootbox.tokensInLootbox, i);
+            
+            // Get the rarity property of the token
+            let token_rarity = token::get_property_value(
+                &token_id,
+                &string::utf8(b"rarity")
+            );
+            
+            // If token has matching rarity, add it to our result vector
+            if (token_rarity == rarity) {
+                vector::push_back(&mut tokens_of_rarity, token_id);
+            };
+            
+            i = i + 1;
+        };
+        
+        tokens_of_rarity
     }
+
+    //TODO Modify Token Metadata by ID
+public entry fun modify_token_metadata(
+    creator: &signer,
+    collection_name: vector<u8>,
+    token_name: vector<u8>,
+    new_uri: vector<u8>,
+    new_description: vector<u8>,
+    new_rarity: vector<u8>,
+    // For other properties
+    property_keys: vector<String>,
+    property_types: vector<String>,
+    property_values: vector<vector<u8>>
+) acquires Lootboxes {
+    let creator_addr = signer::address_of(creator);
+    let collection_name_str = string::utf8(collection_name);
+    let token_name_str = string::utf8(token_name);
+    
+    // Get the lootbox to verify ownership
+    let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+    let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+    
+    // Verify the signer is the creator
+    assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+    // Get token data id
+    let token_data_id = token::create_token_data_id(
+        creator_addr,
+        collection_name_str,
+        token_name_str
+    );
+
+    // If changing rarity, verify the new rarity exists in lootbox configuration
+    if (vector::length(&new_rarity) > 0) {
+        let new_rarity_str = string::utf8(new_rarity);
+        assert!(
+            table::contains(&lootbox.rarities, new_rarity_str),
+            error::invalid_argument(EINVALID_RARITY)
+        );
+
+        // Update rarity property
+        token::mutate_tokendata_property(
+            creator,
+            token_data_id,
+            string::utf8(b"rarity"),
+            string::utf8(b"String"),
+            new_rarity
+        );
+    };
+
+    // Modify URI if provided
+    if (vector::length(&new_uri) > 0) {
+        token::mutate_tokendata_uri(
+            creator,
+            token_data_id,
+            string::utf8(new_uri)
+        );
+    };
+
+    // Modify description if provided
+    if (vector::length(&new_description) > 0) {
+        token::mutate_tokendata_description(
+            creator,
+            token_data_id,
+            string::utf8(new_description)
+        );
+    };
+
+    // Modify other properties if provided
+    let property_len = vector::length(&property_keys);
+    let i = 0;
+    while (i < property_len) {
+        let key = *vector::borrow(&property_keys, i);
+        let type = *vector::borrow(&property_types, i);
+        let value = *vector::borrow(&property_values, i);
+
+        token::mutate_tokendata_property(
+            creator,
+            token_data_id,
+            key,
+            type,
+            value
+        );
+        
+        i = i + 1;
+    };
+}
+
 
     /// Purchase a lootbox
     public entry fun purchase_lootbox<CoinType>(
@@ -330,80 +501,7 @@ public entry fun set_rarities(
         // TODO: Implement random number generation and token assignment.
     }
 
-    /* For token creation
-      // Define mutable settings
-      let mutable_description = true;
-      let mutable_royalty = true;
-      let mutable_uri = true;
-      let mutable_token_description = true;
-      let mutable_token_name = true;
-      let mutable_token_properties = false;
-      let mutable_token_uri = true;
   
-      // Define burn and freeze permissions for creator
-      let tokens_burnable_by_creator = false;
-      let tokens_freezable_by_creator = false;
-  
-      // Define royalty settings (10% royalty)
-      let royalty_numerator = 10;
-      let royalty_denominator = 100;
-    */
-
-    /* Listing using CoinType (Edit to set price)
-   public(friend) fun list_with_fixed_price_internal<CoinType>(
-        seller: &signer,
-        object: object::Object<object::ObjectCore>,
-        price: u64,        
-    ): object::Object<Listing> acquires SellerListings, Sellers, MarketplaceSigner {
-        let constructor_ref = object::create_object(signer::address_of(seller));
-
-        let transfer_ref = object::generate_transfer_ref(&constructor_ref);
-        object::disable_ungated_transfer(&transfer_ref);
-
-        let listing_signer = object::generate_signer(&constructor_ref);
-
-        let listing = Listing {
-            object,
-            seller: signer::address_of(seller),
-            delete_ref: object::generate_delete_ref(&constructor_ref),
-            extend_ref: object::generate_extend_ref(&constructor_ref),
-        };
-        let fixed_price_listing = FixedPriceListing<CoinType> {
-            price,
-        };
-        move_to(&listing_signer, listing);
-        move_to(&listing_signer, fixed_price_listing);
-
-        object::transfer(seller, object, signer::address_of(&listing_signer));
-
-        let listing = object::object_from_constructor_ref(&constructor_ref);
-
-        if (exists<SellerListings>(signer::address_of(seller))) {
-            let seller_listings = borrow_global_mut<SellerListings>(signer::address_of(seller));
-            smart_vector::push_back(&mut seller_listings.listings, object::object_address(&listing));
-        } else {
-            let seller_listings = SellerListings {
-                listings: smart_vector::new(),
-            };
-            smart_vector::push_back(&mut seller_listings.listings, object::object_address(&listing));
-            move_to(seller, seller_listings);
-        };
-        if (exists<Sellers>(get_marketplace_signer_addr())) {
-            let sellers = borrow_global_mut<Sellers>(get_marketplace_signer_addr());
-            if (!smart_vector::contains(&sellers.addresses, &signer::address_of(seller))) {
-                smart_vector::push_back(&mut sellers.addresses, signer::address_of(seller));
-            }
-        } else {
-            let sellers = Sellers {
-                addresses: smart_vector::new(),
-            };
-            smart_vector::push_back(&mut sellers.addresses, signer::address_of(seller));
-            move_to(&get_marketplace_signer(get_marketplace_signer_addr()), sellers);
-        };
-
-        listing
-    }
-    */
 
     public fun append_to_vector(v: &mut vector<u8>, element: u8) {
         // Append the element to the vector
