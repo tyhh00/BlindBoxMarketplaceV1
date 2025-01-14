@@ -14,7 +14,8 @@ module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV2 {
     const RESOURCE_SEED: vector<u8> = b"Crystara_TestV2"; // This could be any seed
 
     //Errors
-    const YOU_ARE_NOT_PROJECT_OWNER: u64 = 1;
+    const EYOU_ARE_NOT_PROJECT_OWNER: u64 = 1;
+    const EMARKETPLACE_RESORUCE_EXISTS: u64 = 2;
 
     struct Decimal has store {
         value: u64,  // The scaled integer value
@@ -33,7 +34,12 @@ module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV2 {
     
     //This apparently gets executed automatically on publishing
     fun init_module(owner_signer: &signer) {
-        assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(YOU_ARE_NOT_PROJECT_OWNER));
+        assert!(signer::address_of(owner_signer) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
+        
+        let resource_address = account::create_resource_address(&signer::address_of(owner_singer), RESOURCE_SEED);
+        assert!(!account::exists_at(resource_address), error::already_exists(EMARKETPLACE_RESORUCE_EXISTS));
+      
+
         let (resource_signer, signer_cap) = account::create_resource_account(owner_signer, RESOURCE_SEED);
         let platformFeeSettings = PlatformFeeSettings {
             blindbox_platformFee_Percent: Decimal{value:5 , scale:2},
