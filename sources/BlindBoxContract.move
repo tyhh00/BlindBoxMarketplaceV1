@@ -26,6 +26,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
     const EMAX_ROLLS_REACHED: u64 = 7;
     const ERESOURCE_FORFIXEDPRICE_EXISTS: u64 = 8;
     const EINVALID_INPUT_LENGTHS: u64 = 9;
+    const EINVALID_RARITY: u64 = 10;
     const ETOKEN_NAME_ALREADY_EXISTS: u64 = 11;
 
     // Market Settings
@@ -322,16 +323,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         let property_values = vector[rarity];  // Store rarity as a property
 
         // Create token metadata in the collection
-        let token_data_id = token::create_token_script(
+        token::create_token_script(
             creator,
             collection_name_str,
             string::utf8(token_name),
             string::utf8(b""),
+            0, //Balance
             max_supply,
             string::utf8(token_uri),
             creator_addr,
             100,
-            5,
+            5, //Royalty Percent
             vector[false, true, true, true, true],
             property_keys,
             property_types,
