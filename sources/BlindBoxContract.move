@@ -25,6 +25,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
     const ELOOTBOX_EXISTS: u64 = 6;
     const EMAX_ROLLS_REACHED: u64 = 7;
     const ERESOURCE_FORFIXEDPRICE_EXISTS: u64 = 8;
+    const EINVALID_INPUT_LENGTHS: u64 = 9;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -228,8 +229,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
     }
 
 
-    //Wop
-    public entry fun set_rarities(
+
+
+public entry fun set_rarities(
     collection_owner: &signer,
     lootbox_name: vector<u8>,
     rarity_names: vector<vector<u8>>,     // e.g., ["common", "rare", "legendary"]
@@ -251,16 +253,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
         assert!(
             len == vector::length(&rarity_weights) && 
             len == vector::length(&show_items_on_roll),
-            error::invalid_argument(EINVALID_RARITY_INPUT)
+            error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
-        // Clear existing rarities if any
-        table::drop(lootbox.rarities);
-        table::drop(lootbox.rarities_showItemWhenRoll);
-        
-        // Initialize new tables
-        lootbox.rarities = table::new();
-        lootbox.rarities_showItemWhenRoll = table::new();
+        // Create new tables
+        let new_rarities = table::new<String, u64>();
+        let new_rarities_show = table::new<String, bool>();
 
         // Add each rarity and its weight
         let i = 0;
@@ -269,11 +267,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
             let weight = *vector::borrow(&rarity_weights, i);
             let show_item = *vector::borrow(&show_items_on_roll, i);
 
-            table::add(&mut lootbox.rarities, rarity_name, weight);
-            table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+            table::add(&mut new_rarities, rarity_name, weight);
+            table::add(&mut new_rarities_show, rarity_name, show_item);
             
             i = i + 1;
         };
+
+        // Replace old tables with new ones
+        lootbox.rarities = new_rarities;
+        lootbox.rarities_showItemWhenRoll = new_rarities_show;
     }
 
     public entry fun add_tokenMetaData(
