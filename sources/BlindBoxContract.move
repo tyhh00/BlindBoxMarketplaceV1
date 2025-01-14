@@ -100,7 +100,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
       // ^ As good as storing the "Collection" Object because thats all we need to access it
       rarities: table::Table<String, u64>, // Map rarity name to weight
       rarities_showItemWhenRoll: table::Table<String, bool>,
-      rarity_count: u64,
+      rarity_keys: vector<String>,         // Store rarity keys for iteration
       
       stock: u64, //Available stock
       maxRolls: u64, //Maximum Rolls ever
@@ -235,6 +235,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
 
         rarities: table::new<String, u64>(),
         rarities_showItemWhenRoll: table::new<String, bool>(),
+        rarity_keys: vector::empty<String>(),
 
         stock: initial_stock,
         maxRolls: max_stock,
@@ -327,6 +328,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
+        // Clear existing rarities if any from rarity keys
+        vector::clear(&mut lootbox.rarity_keys);
+
         // Remove old entries by checking each new rarity name
         let i = 0;
         while (i < len) {
@@ -347,11 +351,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
 
             table::add(&mut lootbox.rarities, rarity_name, weight);
             table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+            vector::push_back(&mut lootbox.rarity_keys, rarity_name);
             
             i = i + 1;
         };
-
-        lootbox.rarity_count = len;
     }
 
   //Add Token To Lootbox
@@ -759,23 +762,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         let total_weight = (0 as u256);
         let rarities = &lootbox.rarities;
         
-        assert!(lootbox.rarity_count > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
+        let len = vector::length(&lootbox.rarity_keys);
+        assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
         
-        // First pass: collect all keys and calculate total weight
-        let rarity_keys = vector::empty<String>();
+        // Calculate total weight
         let i = 0;
-        while (i < lootbox.rarity_count) {
-            if (table::contains(rarities, i)) {
-                let rarity = table::borrow(rarities, i);
-                vector::push_back(&mut rarity_keys, *rarity);
-                let weight = *table::borrow(rarities, *rarity);
-                total_weight = total_weight + (weight as u256);
-            };
+        while (i < len) {
+            let rarity = vector::borrow(&lootbox.rarity_keys, i);
+            let weight = *table::borrow(rarities, *rarity);
+            total_weight = total_weight + (weight as u256);
             i = i + 1;
         };
-        
-        let len = vector::length(&rarity_keys);
-        assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
         
         // Use random number to select rarity
         let roll = random_num % total_weight;
@@ -783,7 +780,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         
         i = 0;
         while (i < len) {
-            let rarity = vector::borrow(&rarity_keys, i);
+            let rarity = vector::borrow(&lootbox.rarity_keys, i);
             let weight = *table::borrow(rarities, *rarity);
             current_weight = current_weight + (weight as u256);
             
@@ -794,7 +791,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         };
 
         // Fallback to last rarity
-        *vector::borrow(&rarity_keys, len - 1)
+        *vector::borrow(&lootbox.rarity_keys, len - 1)
     }
 
 }
