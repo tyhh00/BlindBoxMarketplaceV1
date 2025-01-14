@@ -88,9 +88,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     struct PendingRewards has key {
         rewards: table::Table<u64, PendingReward>,
         next_nonce: u64,
-        purchase_events: event::EventHandle<LootboxPurchaseInitiated>,
-        distribution_events: event::EventHandle<LootboxRewardDistributed>,
-        vrf_callback_events: event::EventHandle<VRFCallbackReceived>
     }
 
     //Structs
@@ -637,7 +634,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
             buyer: buyer_addr,
             creator: creator_addr,
             collection_name: collection_name_str,
-            1, //quantity
+            quantity: 1, //quantity
             nonce,
         };
 
