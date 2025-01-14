@@ -379,9 +379,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         // Emit event
         event::emit(
             RaritiesSetEvent {
-                creator: creator_addr,
-                collection_name: collection_name_str,
-                rarity_names: rarity_names_str,
+                creator: owner_addr,
+                collection_name: lootbox_name_str,
+                rarity_names: rarity_names,
                 weights: rarity_weights,
                 timestamp: timestamp::now_microseconds()
             }
@@ -455,12 +455,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
         table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
 
-
-        let creator_addr = signer::address_of(creator);
-        let collection_name_str = string::utf8(collection_name);
-        let token_name_str = string::utf8(token_name);
+        // Preparing Event Data
         let token_uri_str = string::utf8(token_uri);
-        let rarity_str = string::utf8(rarity);
+
         // Emit event
         event::emit(
             TokenAddedEvent {
