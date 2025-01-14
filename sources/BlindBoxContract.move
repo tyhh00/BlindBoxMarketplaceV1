@@ -5,6 +5,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
     use std::string::{Self, String};
     use std::error;
     use std::table;
+    use std::type_info;
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
@@ -132,8 +133,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
       //FixedPriceListing with CoinType
       priceResourceAddress: address,
       
-      requiresKey: bool,
-      keysCollectionName: String,
+      requiresKey: bool, //NOT YET IMPLEMENTED
+      keysCollectionName: String, //NOT YET IMPLEMENTED
       
       tokensInLootbox: vector<String>, //Token names
       token_rarity_mapping: table::Table<String, String>, // Map token_name to rarity
@@ -299,12 +300,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
       );
 
       //TODO if need key, create key collection
+
+      // Get the type name of CoinType
+      let coin_type_name = type_info::type_name<CoinType>();
       
       let lootbox_event = LootboxCreatedEvent {
         creator: account_addr,
         collection_name: collection_name,
         price: price,
-        price_coinType: string::utf8(b"TODO: This is not done yet cuz chains dont store these info at runtime"),
+        price_coinType: coin_type_name,
         timestamp: timestamp::now_microseconds(), 
       };
       event::emit(lootbox_event);
