@@ -137,8 +137,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
       // Check exist in global record. If it exist, it will throw an error.
-      let resource_address = account::create_resource_address(account_addr, lootbox_resource_account_seed);
-      assert!(!exists<FixedPriceListing<CoinType>>(&resource_address), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
+      let resource_address = account::create_resource_address(&account_addr, lootbox_resource_account_seed);
+      assert!(!exists<FixedPriceListing<CoinType>>(resource_address), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
       
       let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
