@@ -329,7 +329,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
         );
 
         // Clear existing rarities if any from rarity keys
-        vector::clear(&mut lootbox.rarity_keys);
+        lootbox.rarity_keys = vector::empty<String>();
 
         // Remove old entries by checking each new rarity name
         let i = 0;
