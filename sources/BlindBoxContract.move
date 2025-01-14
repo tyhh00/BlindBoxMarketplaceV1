@@ -7,7 +7,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
     use std::table;
     ///use std::option::{Self, Option};
     use supra_framework::account::{Self, SignerCapability};
-    use supra_framework::resource_account;
     use supra_framework::supra_account;
     use aptos_token::token;
     use supra_framework::coin::{Self, Coin};
@@ -137,12 +136,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
       vector::append(&mut lootbox_resource_account_seed, collection_name);
       vector::append(&mut lootbox_resource_account_seed, b"BlindboxModule");
 
-      
-      let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = resource_account::create_resource_account(source_account, lootbox_resource_account_seed);
-      let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
-      
       // Check exist in global record. If it exist, it will throw an error.
       assert!(!exists<FixedPriceListing<CoinType>>(lootbox_resource_account_addr), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
+      
+      let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
+      let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
       
       let fixed_price_listing = FixedPriceListing<CoinType> {
             price,
