@@ -330,7 +330,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         token::create_token_script(
             creator,
             collection_name_str,
-            string::utf8(token_name),
+            token_name_str,
             string::utf8(b""),
             0, //Balance
             max_supply,
@@ -359,6 +359,34 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
       vector::append(&mut name_bytes, *string::bytes(&id_str));
       
       string::utf8(name_bytes)
+  }
+
+  fun number_to_string(num: u64): String {
+    if (num == 0) {
+        return string::utf8(b"0")
+    };
+    
+    let digits = vector::empty<u8>();
+    let temp_num = num;
+    
+    while (temp_num > 0) {
+        let digit = ((48 + (temp_num % 10)) as u8);  // Convert to ASCII
+        vector::push_back(&mut digits, digit);
+        temp_num = temp_num / 10;
+    };
+    
+    // Reverse the digits since we added them in reverse order
+    let len = vector::length(&digits);
+    let i = 0;
+    while (i < len / 2) {
+        let j = len - i - 1;
+        let temp = *vector::borrow(&digits, i);
+        *vector::borrow_mut(&mut digits, i) = *vector::borrow(&digits, j);
+        *vector::borrow_mut(&mut digits, j) = temp;
+        i = i + 1;
+    };
+    
+    string::utf8(digits)
   }
 
   // Helper function to get all tokens of a specific rarity
