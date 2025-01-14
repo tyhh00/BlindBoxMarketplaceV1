@@ -177,20 +177,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV3 {
         tokensInLootbox: vector::empty<String>(),
       };
 
-          // Borrow a mutable reference to the `Lootboxes` resource
+      // Borrow a mutable reference to the `Lootboxes` resource
       let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
 
+      // Check if the lootbox already exists
+      assert!(!table::contains(&lootboxes.lootbox_table, collection_name_str), error::already_exists(ELOOTBOX_EXISTS));
       // Insert the new lootbox into the `lootbox_table`
-      if (table::contains(&lootboxes.lootbox_table, collection_name_str)) {
-          abort error::already_exists(ELOOTBOX_EXISTS); // Custom error code indicating the lootbox already exists
-      };
-
       table::add(&mut lootboxes.lootbox_table, collection_name_str, new_lootbox);
 
-      //Add to lootboxes immediately dont store in let new_lootbox. So it dosent need a drop ability
-      //U forgot this functionality
-
-
+      // Create the collection with mutability settings
       let mutability_settings = vector::empty<bool>();
       vector::push_back(&mut mutability_settings , true); //Description
       vector::push_back(&mut mutability_settings , true); //URI
