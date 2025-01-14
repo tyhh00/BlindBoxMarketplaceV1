@@ -285,15 +285,22 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
     public entry fun add_token_to_lootbox(
       creator: &signer,
       collection_name: vector<u8>,
-      token_name: vector<u8>,
       token_uri: vector<u8>,
-      metadata_uri: vector<u8>,
       rarity: vector<u8>,
       max_supply: u64
     ) acquires Lootboxes {
         let creator_addr = signer::address_of(creator);
         let collection_name_str = string::utf8(collection_name);
-        let token_name_str = string::utf8(token_name);
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Generate a new token name
+        let token_count = vector::length(&lootbox.tokensInLootbox);
+        let token_name_str = generate_token_name(token_count + 1);
 
         // Check if token with this name already exists
         let token_data_id = token::create_token_data_id(
@@ -305,13 +312,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
             !token::check_tokendata_exists(creator_addr, collection_name_str, token_name_str),
             error::already_exists(ETOKEN_NAME_ALREADY_EXISTS)
         );
-        
-        // Get the lootbox
-        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
-        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
-        
-        // Verify the signer is the creator
-        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
         
         // Verify rarity exists in lootbox configuration
         let rarity_str = string::utf8(rarity);
@@ -348,6 +348,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
         table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
     }
+
+  fun generate_token_name(id: u64): String {
+      let prefix = b"TOKEN_";
+      let name_bytes = vector::empty<u8>();
+      vector::append(&mut name_bytes, prefix);
+      
+      // Convert id to string and append
+      let id_str = number_to_string(id);  // You'll need to implement this
+      vector::append(&mut name_bytes, *string::bytes(&id_str));
+      
+      string::utf8(name_bytes)
+  }
 
   // Helper function to get all tokens of a specific rarity
   fun get_tokens_by_rarity(
