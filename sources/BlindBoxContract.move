@@ -337,8 +337,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
             5, //Royalty Percent
             vector[false, true, true, true, true],
             property_keys,
+            property_values,
             property_types,
-            property_values
         );
 
         // Store token data id only
@@ -422,8 +422,8 @@ public entry fun modify_token_metadata(
             creator,
             token_data_id,
             rarity_keys,
+            rarity_values,
             rarity_types,
-            rarity_values
         );
     };
 
@@ -451,8 +451,8 @@ public entry fun modify_token_metadata(
             creator,
             token_data_id,
             property_keys,
+            property_values,
             property_types,
-            property_values
         );
     };
 }
