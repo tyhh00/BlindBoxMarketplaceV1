@@ -136,7 +136,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
     }
 
     //Reward Structs
-    struct PendingReward has store {
+    struct PendingReward has store,drop {
       buyer: address,
       creator: address,
       collection_name: String,
@@ -664,7 +664,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV5 {
       caller_address: address,
       rng_count: u8,
       client_seed: u64,
-    ) acquires PendingRewards, Lootboxes {
+    ) acquires PendingRewards, Lootboxes, ResourceInfo {
         // Verify VRF result
         let random_numbers = supra_vrf::verify_callback(
             nonce, 
