@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV3 {
     
     use std::signer;
     use std::vector;
@@ -237,49 +237,49 @@ public entry fun set_rarities(
     rarity_names: vector<vector<u8>>,
     rarity_weights: vector<u64>,
     show_items_on_roll: vector<bool>
-) acquires Lootboxes {
-    let owner_addr = signer::address_of(collection_owner);
-    let lootbox_name_str = string::utf8(lootbox_name);
+    ) acquires Lootboxes {
+        let owner_addr = signer::address_of(collection_owner);
+        let lootbox_name_str = string::utf8(lootbox_name);
 
-    // Get the lootbox
-    let lootboxes = borrow_global_mut<Lootboxes>(owner_addr);
-    let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, lootbox_name_str);
-    
-    // Verify the signer is the creator
-    assert!(lootbox.creator == owner_addr, error::permission_denied(ENOT_AUTHORIZED));
-    
-    // Verify input vectors have same length
-    let len = vector::length(&rarity_names);
-    assert!(
-        len == vector::length(&rarity_weights) && 
-        len == vector::length(&show_items_on_roll),
-        error::invalid_argument(EINVALID_INPUT_LENGTHS)
-    );
-
-    // Remove old entries by checking each new rarity name
-    let i = 0;
-    while (i < len) {
-        let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
-        if (table::contains(&lootbox.rarities, rarity_name)) {
-            table::remove(&mut lootbox.rarities, rarity_name);
-            table::remove(&mut lootbox.rarities_showItemWhenRoll, rarity_name);
-        };
-        i = i + 1;
-    };
-
-    // Add new entries
-    let i = 0;
-    while (i < len) {
-        let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
-        let weight = *vector::borrow(&rarity_weights, i);
-        let show_item = *vector::borrow(&show_items_on_roll, i);
-
-        table::add(&mut lootbox.rarities, rarity_name, weight);
-        table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(owner_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, lootbox_name_str);
         
-        i = i + 1;
-    };
-}
+        // Verify the signer is the creator
+        assert!(lootbox.creator == owner_addr, error::permission_denied(ENOT_AUTHORIZED));
+        
+        // Verify input vectors have same length
+        let len = vector::length(&rarity_names);
+        assert!(
+            len == vector::length(&rarity_weights) && 
+            len == vector::length(&show_items_on_roll),
+            error::invalid_argument(EINVALID_INPUT_LENGTHS)
+        );
+
+        // Remove old entries by checking each new rarity name
+        let i = 0;
+        while (i < len) {
+            let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
+            if (table::contains(&lootbox.rarities, rarity_name)) {
+                table::remove(&mut lootbox.rarities, rarity_name);
+                table::remove(&mut lootbox.rarities_showItemWhenRoll, rarity_name);
+            };
+            i = i + 1;
+        };
+
+        // Add new entries
+        let i = 0;
+        while (i < len) {
+            let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
+            let weight = *vector::borrow(&rarity_weights, i);
+            let show_item = *vector::borrow(&show_items_on_roll, i);
+
+            table::add(&mut lootbox.rarities, rarity_name, weight);
+            table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+            
+            i = i + 1;
+        };
+    }
 
     public entry fun add_tokenMetaData(
 
