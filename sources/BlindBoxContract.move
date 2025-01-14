@@ -179,6 +179,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
         keysCollectionName: string::utf8(keys_collection_name),
 
         tokensInLootbox: vector::empty<String>(),
+        token_rarity_mapping: table::new<String, String>(),
       };
 
       // Borrow a mutable reference to the `Lootboxes` resource
