@@ -230,11 +230,50 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV2 {
 
     //Wop
     public entry fun set_rarities(
-      collection_owner: &signer,
-      lootbox_name: vector<u8>,
+    collection_owner: &signer,
+    lootbox_name: vector<u8>,
+    rarity_names: vector<vector<u8>>,     // e.g., ["common", "rare", "legendary"]
+    rarity_weights: vector<u64>,          // e.g., [70, 25, 5]
+    show_items_on_roll: vector<bool>      // whether to show items of this rarity when rolled
+    ) acquires Lootboxes {
+        let owner_addr = signer::address_of(collection_owner);
+        let lootbox_name_str = string::utf8(lootbox_name);
 
-    ) {
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(owner_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, lootbox_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == owner_addr, error::permission_denied(ENOT_AUTHORIZED));
+        
+        // Verify input vectors have same length
+        let len = vector::length(&rarity_names);
+        assert!(
+            len == vector::length(&rarity_weights) && 
+            len == vector::length(&show_items_on_roll),
+            error::invalid_argument(EINVALID_RARITY_INPUT)
+        );
 
+        // Clear existing rarities if any
+        table::drop(lootbox.rarities);
+        table::drop(lootbox.rarities_showItemWhenRoll);
+        
+        // Initialize new tables
+        lootbox.rarities = table::new();
+        lootbox.rarities_showItemWhenRoll = table::new();
+
+        // Add each rarity and its weight
+        let i = 0;
+        while (i < len) {
+            let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
+            let weight = *vector::borrow(&rarity_weights, i);
+            let show_item = *vector::borrow(&show_items_on_roll, i);
+
+            table::add(&mut lootbox.rarities, rarity_name, weight);
+            table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+            
+            i = i + 1;
+        };
     }
 
     public entry fun add_tokenMetaData(
