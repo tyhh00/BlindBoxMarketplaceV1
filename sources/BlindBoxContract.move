@@ -9,6 +9,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
     use supra_framework::account::{Self, SignerCapability};
     use supra_framework::supra_account;
     use aptos_token::token;
+    use aptos_token::property_map;
     use supra_framework::coin::{Self, Coin};
     use supra_framework::event;
     use supra_framework::timestamp;
@@ -365,7 +366,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV4 {
           );
           
           // Get the token's properties
-          let token_properties = token::get_tokendata_property_map(token_data_id);
+          let token_properties = token::get_property_map(token_data_id);
           let token_rarity = property_map::read_string(&token_properties, &string::utf8(b"rarity"));
           
           // If token has matching rarity, add its name to our result vector
