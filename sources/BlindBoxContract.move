@@ -223,7 +223,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     // Escrow Resource for User Claim from Purchases
     struct UserClaimResourceInfo has key {
         resource_signer_cap: account::SignerCapability,
-        resource_signer_address: address
+        resource_signer_address: address,
         claimable_tokens: vector<TokenIdentifier>
     }
 
