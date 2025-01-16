@@ -205,6 +205,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       nonce: u64,  // Link to the VRF request
     }
 
+    // Escrow Resource for User Claim from Purchases
+    struct UserClaimResourceInfo has key {
+        resource_signer_cap: account::SignerCapability,
+        resource_signer_address: address
+    }
+
     //Entry Functions
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
@@ -955,6 +961,24 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             selected_token
         );
 
+        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED";
+        let user_claim_resource_address = account::create_resource_address(&pending_reward.buyer, user_claim_seed);
+        // If user claim resource account doesn't exist, create it
+        if (!account::exists_at(user_claim_resource_address)) {
+            let (resource_account, resource_signer_cap) = account::create_resource_account(
+            &account::create_signer_with_capability(&lootbox.collection_resource_signer_cap), 
+            user_claim_seed
+            );
+            // Store signer capability in a new resource
+            move_to(&resource_account, UserClaimResourceInfo {
+                resource_signer_cap: resource_signer_cap,
+                resource_signer_address: resource_account
+            });
+        };
+        // Get the resource account signer using stored capability
+        let claim_info = borrow_global<UserClaimResourceInfo>(user_claim_resource_address);
+        let user_claim_escrow_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
+
         // Mint token into resource account
         let token_minted_id = token::mint_token(
             &collection_signer,
@@ -964,7 +988,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Transfer token to buyer
         token::transfer(
-            &collection_signer,
+            &user_claim_escrow_signer,
             token_minted_id,
             pending_reward.buyer,
             1 //amount
