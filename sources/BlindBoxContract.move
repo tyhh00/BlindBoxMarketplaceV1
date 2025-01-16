@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     
     use std::signer;
     use std::vector;
@@ -164,7 +164,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
 
     //DVRF SIgner Resource
     struct ResourceInfo has key {
-      signer_cap: account::SignerCapability
+      signer_cap: account::SignerCapability,
+      signer_address: address
     }
 
     //Reward Structs
@@ -180,14 +181,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        assert!(!exists<PendingRewards>(signer::address_of(publisher)), error::already_exists(EALREADY_INITIALIZED));
+        let resource_account_seed = b"LOOTBOX_RESOURCE_V10";
+
+        let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
+        assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
 
         // Create resource account with a seed
-        let (resource_signer, signer_cap) = account::create_resource_account(publisher, b"LOOTBOX_RESOURCE_V9");
+        let (resource_signer, signer_cap) = account::create_resource_account(publisher, resource_account_seed);
         
         // Store signer capability
         move_to(publisher, ResourceInfo {
-            signer_cap: signer_cap
+            signer_cap: signer_cap,
+            signer_address: signer::address_of(resource_signer)
         });
         
         //initialize pending rewards
