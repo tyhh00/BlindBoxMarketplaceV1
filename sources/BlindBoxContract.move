@@ -927,7 +927,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       nonce: u64,
       caller_address: address,
       random_number: u256
-    ) acquires PendingRewards, Lootboxes {
+    ) acquires PendingRewards, Lootboxes, UserClaimResourceInfo {
 
         // Emit VRF callback event
         event::emit(
