@@ -275,11 +275,21 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         //price: fixed_price_listing,
         priceResourceAddress: lootbox_resource_account_addr,
 
-        requiresKey: requiresKey,
-        keysCollectionName: string::utf8(keys_collection_name),
-
         tokensInLootbox: vector::empty<String>(),
         token_rarity_mapping: table::new<String, String>(),
+
+        //Not Yet Implemented
+        is_active: false,
+        mutable_if_active: false,
+
+        //Not Yet Implemented
+        price_modifies_when_lack_of_certain_rarity: false,
+        rarities_price_modifier_if_sold_out: table::new<String, u64>(),
+
+        //Not Yet Implemented
+        requiresKey: requiresKey,
+        keysCollectionName: string::utf8(keys_collection_name),
+        
       };
 
       // Borrow a mutable reference to the `Lootboxes` resource
@@ -439,10 +449,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         );
 
         // Set up token properties including rarity
-            let property_keys = vector[string::utf8(b"rarity")];
-            let property_values = vector[rarity];
-            let property_types = vector[string::utf8(b"String")];
+        let property_keys = vector[string::utf8(b"rarity")];
+        let property_values = vector[rarity];
+        let property_types = vector[string::utf8(b"String")];
 
+        //Token Mutability Configuration
+        let token_mutability_settings = token::create_token_mutability_config(
+            vector[false, true, true, true, true] //Max Supply, URI, Royalty, Description, Properties
+        )
 
         // Create token metadata in the collection
         token::create_tokendata(
@@ -455,7 +469,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
             creator_addr,
             100,
             5, //Royalty Percent
-            vector[false, true, true, true, true], //Max Supply, Description, URI, Royalty, Mutability
+            token_mutability_settings
             property_keys, 
             property_values,
             property_types,
