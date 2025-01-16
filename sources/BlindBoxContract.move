@@ -49,6 +49,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const EUNSAFE_NUMBER_CONVERSION: u64 = 15; // Overflow or unsafe conversion
     const ELOOTBOX_NOTEXISTS: u64 = 16;
     const EPRICE_NOT_SET_OR_INVALID_COIN_TYPE: u64 = 17;
+    const EPENDING_REWARDS_NOT_INITIALIZED: u64 = 18;
+    const EPENDING_REWARD_NOT_FOUND: u64 = 19;
+    const EMETADATA_NOT_FOUND: u64 = 20;
+    const ETOKEN_DATA_NOT_FOUND: u64 = 21;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -789,8 +793,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       caller_address: address,
       rng_count: u8,
       client_seed: u64,
-    ) //acquires PendingRewards, Lootboxes 
-    {
+    ) acquires PendingRewards, Lootboxes {
         // Verify VRF result
         let random_numbers = supra_vrf::verify_callback(
             nonce, 
@@ -813,8 +816,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 timestamp: timestamp::now_microseconds()
             }
         );
-
-        /*
 
         // Get pending reward
         let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
@@ -856,7 +857,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Create token data id
         let token_data_id = token::create_token_data_id(
-            pending_reward.creator,
+            lootbox.collection_resource_address,
             pending_reward.collection_name,
             selected_token
         );
@@ -889,7 +890,119 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 timestamp: timestamp::now_microseconds()
             }
         );
-        */
+
+    }
+
+    // Callback function for VRF
+    public entry fun callback_test_manual_toremove(
+      nonce: u64,
+      caller_address: address,
+      random_number: u256
+    ) acquires PendingRewards, Lootboxes {
+        // Check if pending rewards exists
+        assert!(
+            exists<PendingRewards>(@projectOwnerAdr),
+            error::not_found(EPENDING_REWARDS_NOT_INITIALIZED)
+        );
+
+        // Get pending rewards and check if this nonce exists
+        let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
+        assert!(
+            table::contains(&pending_rewards.rewards, nonce),
+            error::not_found(EPENDING_REWARD_NOT_FOUND)
+        );
+
+        // Remove pending reward
+        let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
+
+        // Check if lootboxes exists for creator
+        assert!(
+            exists<Lootboxes>(pending_reward.creator),
+            error::not_found(ELOOTBOX_NOT_FOUND)
+        );
+
+        // Get lootboxes and check if specific lootbox exists
+        let lootboxes = borrow_global_mut<Lootboxes>(pending_reward.creator);
+        assert!(
+            table::contains(&lootboxes.lootbox_table, pending_reward.collection_name),
+            error::not_found(ELOOTBOX_NOTEXISTS)
+        );
+
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, pending_reward.collection_name);
+        
+        // Select rarity based on weights using the provided random number
+        let selected_rarity = select_rarity(lootbox, random_number);
+        
+        // Get tokens of that rarity
+        let tokens_of_rarity = get_tokens_by_rarity(lootbox, selected_rarity);
+        
+        // Select random token from that rarity
+        let len = vector::length(&tokens_of_rarity);
+        assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
+        
+        // Calculate token index using random number
+        let len_u256 = (len as u256);
+        let token_index = random_number % len_u256;
+        let token_index_u64 = (token_index as u64);
+        assert!(token_index_u64 < len, error::invalid_state(EUNSAFE_NUMBER_CONVERSION));
+        
+        let selected_token = *vector::borrow(&tokens_of_rarity, token_index_u64);
+
+        // Verify token metadata exists
+        assert!(
+            table::contains(&lootbox.token_metadata, selected_token),
+            error::not_found(EMETADATA_NOT_FOUND)
+        );
+
+        // Get collection signer
+        let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
+        // Create token data id
+        let token_data_id = token::create_token_data_id(
+            lootbox.token_resource_address,
+            pending_reward.collection_name,
+            selected_token
+        );
+
+        // Verify token exists in collection
+        assert!(
+            token::check_tokendata_exists(
+                lootbox.token_resource_address,
+                pending_reward.collection_name,
+                selected_token
+            ),
+            error::not_found(ETOKEN_DATA_NOT_FOUND)
+        );
+
+        // Mint token
+        let token_minted_id = token::mint_token(
+            &collection_signer,
+            token_data_id,
+            1
+        );
+
+        // Transfer token to buyer
+        token::transfer(
+            &collection_signer,
+            token_minted_id,
+            pending_reward.buyer,
+            1 //amount
+        );
+
+        // Emit distribution event
+        event::emit(
+            LootboxRewardDistributedEvent {
+                nonce,
+                buyer: pending_reward.buyer,
+                creator: pending_reward.creator,
+                collection_name: pending_reward.collection_name,
+                selected_token: selected_token,
+                selected_rarity: selected_rarity,
+                random_number: *vector::borrow(&random_numbers, 0),
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+
     }
 
     // Helper function to select rarity based on weights
@@ -974,4 +1087,5 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         );
     }
 
+}
 }
