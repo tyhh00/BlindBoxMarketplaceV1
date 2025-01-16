@@ -183,8 +183,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
         let resource_account_seed = b"LOOTBOX_RESOURCE_V10";
 
-        assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
+        assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
 
         // Create resource account with a seed
         let (resource_signer, signer_cap) = account::create_resource_account(publisher, resource_account_seed);
