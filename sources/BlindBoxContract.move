@@ -594,9 +594,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         // Verify the signer is the creator
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
+        let collection_resource_address = lootbox.collection_resource_address;
+        let collection_resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
         // Get token data id
         let token_data_id = token::create_token_data_id(
-            creator_addr,
+            collection_resource_address,
             collection_name_str,
             token_name_str
         );
@@ -615,7 +618,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
             let rarity_types = vector[string::utf8(b"String")];
 
             token::mutate_tokendata_property(
-                creator,
+                collection_resource_signer,
                 token_data_id,
                 rarity_keys,
                 rarity_values,
@@ -626,7 +629,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         // Modify URI if provided
         if (vector::length(&new_uri) > 0) {
             token::mutate_tokendata_uri(
-                creator,
+                collection_resource_signer,
                 token_data_id,
                 string::utf8(new_uri)
             );
@@ -635,7 +638,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         // Modify description if provided
         if (vector::length(&new_description) > 0) {
             token::mutate_tokendata_description(
-                creator,
+                collection_resource_signer,
                 token_data_id,
                 string::utf8(new_description)
             );
@@ -644,7 +647,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         // Modify other properties if provided
         if (vector::length(&property_keys) > 0) {
             token::mutate_tokendata_property(
-                creator,
+                collection_resource_signer,
                 token_data_id,
                 property_keys,
                 property_values,
