@@ -814,11 +814,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
             1  // amount
         );
 
-        // Mint token into buyer
-        token::direct_transfer(
+        // Transfer token to buyer
+        token::transfer(
             &collection_signer,
-            pending_reward.buyer,
             token_minted_id,
+            pending_reward.buyer,
             1 //amount
         );
 
