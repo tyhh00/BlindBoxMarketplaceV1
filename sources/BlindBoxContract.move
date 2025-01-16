@@ -899,86 +899,67 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       caller_address: address,
       random_number: u256
     ) acquires PendingRewards, Lootboxes {
-        // Check if pending rewards exists
-        assert!(
-            exists<PendingRewards>(@projectOwnerAdr),
-            error::not_found(EPENDING_REWARDS_NOT_INITIALIZED)
+
+        // Emit VRF callback event
+        event::emit(
+            VRFCallbackReceivedEvent {
+                nonce,
+                caller_address,
+                random_numbers: vector[random_number],
+                timestamp: timestamp::now_microseconds()
+            }
         );
 
-        // Get pending rewards and check if this nonce exists
+        // Get pending reward
         let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
-        assert!(
-            table::contains(&pending_rewards.rewards, nonce),
-            error::not_found(EPENDING_REWARD_NOT_FOUND)
-        );
-
-        // Remove pending reward
         let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
 
-        // Check if lootboxes exists for creator
-        assert!(
-            exists<Lootboxes>(pending_reward.creator),
-            error::not_found(ELOOTBOX_NOT_FOUND)
-        );
-
-        // Get lootboxes and check if specific lootbox exists
+        // Get lootbox
         let lootboxes = borrow_global_mut<Lootboxes>(pending_reward.creator);
-        assert!(
-            table::contains(&lootboxes.lootbox_table, pending_reward.collection_name),
-            error::not_found(ELOOTBOX_NOTEXISTS)
-        );
-
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, pending_reward.collection_name);
+
+        // Use random number to select rarity and token
+        let random_num = random_number;
         
-        // Select rarity based on weights using the provided random number
-        let selected_rarity = select_rarity(lootbox, random_number);
+        // Select rarity based on weights
+        let selected_rarity = select_rarity(lootbox, random_num);
         
         // Get tokens of that rarity
         let tokens_of_rarity = get_tokens_by_rarity(lootbox, selected_rarity);
         
         // Select random token from that rarity
         let len = vector::length(&tokens_of_rarity);
+    
+        // Verify we have tokens to select from
         assert!(len > 0, error::invalid_state(EINVALID_VECTOR_LENGTH));
         
-        // Calculate token index using random number
+        // Safe conversion: len is guaranteed to fit in u256
         let len_u256 = (len as u256);
-        let token_index = random_number % len_u256;
+        
+        // Calculate token index using full u256 randomness
+        let token_index = random_num % len_u256;
+        
+        // Safe conversion back to u64: guaranteed to be less than len
         let token_index_u64 = (token_index as u64);
         assert!(token_index_u64 < len, error::invalid_state(EUNSAFE_NUMBER_CONVERSION));
         
         let selected_token = *vector::borrow(&tokens_of_rarity, token_index_u64);
-
-        // Verify token metadata exists
-        assert!(
-            table::contains(&lootbox.token_metadata, selected_token),
-            error::not_found(EMETADATA_NOT_FOUND)
-        );
 
         // Get collection signer
         let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
 
         // Create token data id
         let token_data_id = token::create_token_data_id(
-            lootbox.token_resource_address,
+            lootbox.collection_resource_address,
             pending_reward.collection_name,
             selected_token
         );
 
-        // Verify token exists in collection
-        assert!(
-            token::check_tokendata_exists(
-                lootbox.token_resource_address,
-                pending_reward.collection_name,
-                selected_token
-            ),
-            error::not_found(ETOKEN_DATA_NOT_FOUND)
-        );
-
-        // Mint token
+        // Mint token into resource account
         let token_minted_id = token::mint_token(
             &collection_signer,
             token_data_id,
-            1
+            1  // amount
         );
 
         // Transfer token to buyer
@@ -998,7 +979,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 collection_name: pending_reward.collection_name,
                 selected_token: selected_token,
                 selected_rarity: selected_rarity,
-                random_number: *vector::borrow(&random_numbers, 0),
+                random_number: random_number,
                 timestamp: timestamp::now_microseconds()
             }
         );
