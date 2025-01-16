@@ -219,12 +219,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     ) acquires Lootboxes {
       let account_addr = signer::address_of(source_account);
 
-      //Check if Underlying Collection Name was used before
-      assert!(
-        !token::check_collection_exists(account_addr, string::utf8(collection_name))
-        , 
-        error::not_found(ECOLLECTION_EXISTS)
-      );
+      //Check if Underlying Collection Name was used before, also check if collections exists
+      if(exists<token::Collection>(account_addr)) {
+        assert!(
+            !token::check_collection_exists(account_addr, string::utf8(collection_name))
+            , 
+            error::not_found(ECOLLECTION_EXISTS)
+        );
+      };
 
       //Check if Lootboxes Table Exists for Creator, If No, Init Table.
       if (!exists<Lootboxes>(account_addr)) {
