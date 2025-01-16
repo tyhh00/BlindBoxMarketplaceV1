@@ -315,7 +315,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
   
       // Create the collection using the new standard
       token::create_collection(
-          &collection_resource_signer,
+          &lootbox_resource_account_signer,
           collection_name_str,
           description_str,
           collection_uri_str,
