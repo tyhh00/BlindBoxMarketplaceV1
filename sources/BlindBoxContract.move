@@ -48,6 +48,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const EINVALID_VECTOR_LENGTH: u64 = 14;  // Empty vectors or invalid lengths
     const EUNSAFE_NUMBER_CONVERSION: u64 = 15; // Overflow or unsafe conversion
     const ELOOTBOX_NOTEXISTS: u64 = 16;
+    const EPRICE_NOT_SET_OR_INVALID_COIN_TYPE: u64 = 17;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -697,9 +698,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
 
-        let FixedPriceListing {
-            price,
-        } = borrrow_global<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
+        assert!(exists<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress), error::not_found(EPRICE_NOT_SET_OR_INVALID_COIN_TYPE));
+        let price = borrow_global<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress).price;
+        //Need add checks is type added the same as the runtime version else, dont alllow purchase
 
         // Check buyer's balance
         let buyer_balance = coin::balance<CoinType>(buyer_addr);
