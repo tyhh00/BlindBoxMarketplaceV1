@@ -445,19 +445,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
 
 
         // Create token metadata in the collection
-        token::create_token_script(
+        token::create_tokendata(
             creator,
             collection_name_str,
             token_name_str,
             string::utf8(b""),
-            0, //Balance
             max_supply,
             string::utf8(token_uri),
             creator_addr,
             100,
             5, //Royalty Percent
-            vector[false, true, true, true, true],
-            property_keys,
+            vector[false, true, true, true, true], //Max Supply, Description, URI, Royalty, Mutability
+            property_keys, 
             property_values,
             property_types,
         );
