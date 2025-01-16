@@ -227,15 +227,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         });
         fresh_account = true;
       };
-
-      //Check if Underlying Collection Name was used before, also check if collections exists
-      if(!fresh_account) {
-        assert!(
-            !token::check_collection_exists(account_addr, string::utf8(collection_name))
-            , 
-            error::not_found(ECOLLECTION_EXISTS)
-        );
-      };
       
       // Convert the vectors to strings
       let collection_name_str = string::utf8(collection_name);
@@ -260,6 +251,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       
       let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
+
+      //Check if Underlying Collection Name was used before, also check if collections exists
+      //Skip fresh accounts because they wouldnt have a collection yet under their resource account
+      if(!fresh_account) {
+        assert!(
+            !token::check_collection_exists(lootbox_resource_account_addr, string::utf8(collection_name))
+            , 
+            error::not_found(ECOLLECTION_EXISTS)
+        );
+      };
       
       // Check exist in global record. If it exist, it will throw an error.
       assert!(!exists<FixedPriceListing<CoinType>>(lootbox_resource_account_addr), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
