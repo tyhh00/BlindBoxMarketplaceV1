@@ -1,5 +1,17 @@
 module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     
+    /**
+    *
+    * Module Upgrade Notes:
+    *
+    * - Change the fun init_module resource seed to "LOOTBOX_RESOURCE_V(NEW VERSION)"
+    * - Change the callback module name in purchase_lootbox to "BlindBoxContract_Crystara_TestV(NEW VERSION)"
+    *
+    *
+    *
+    *
+    */
+
     use std::signer;
     use std::vector;
     use std::string::{Self, String};
@@ -710,7 +722,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Request VRF
         let callback_address = @projectOwnerAdr;
-        let callback_module = string::utf8(b"BlindBoxContract_Crystara_TestV5");
+        let callback_module = string::utf8(b"BlindBoxContract_Crystara_TestV10");
         let callback_function = string::utf8(b"receive_dvrf");
 
         // Get this module's own resource signer
