@@ -470,7 +470,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
 
         // Create token metadata in the collection
         token::create_tokendata(
-            collection_resource_signer,
+            &collection_resource_signer,
             collection_name_str,
             token_name_str,
             string::utf8(b""),
