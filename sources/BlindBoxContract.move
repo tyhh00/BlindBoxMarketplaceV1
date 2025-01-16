@@ -133,11 +133,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
       //FixedPriceListing with CoinType
       priceResourceAddress: address,
       
-      requiresKey: bool, //NOT YET IMPLEMENTED
-      keysCollectionName: String, //NOT YET IMPLEMENTED
-      
       tokensInLootbox: vector<String>, //Token names
       token_rarity_mapping: table::Table<String, String>, // Map token_name to rarity
+
+      //Not Yet Implemented
+      is_active: bool,
+      mutable_if_active: bool, //If true, the lootbox can be modified while active
+
+      requiresKey: bool, //Require Key to Roll and purchase lootbox
+      keysCollectionName: String, //Collection Name of the keys by creator
+
+      price_modifies_when_lack_of_certain_rarity: bool, //If true, the price will increase if the certain rarity is sold out
+      rarities_price_modifier_if_sold_out: table::Table<String, u64>, //Map rarity to price modifier
     }
 
     /// Table to store all lootboxes by creator and collection name
