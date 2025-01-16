@@ -861,16 +861,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             }
         );
 
+        // Use random number by DVRF CALLBACK
+        let random_num = *vector::borrow(&random_numbers, 0);
+        
         // Get pending reward
         let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
+        assert!(table::contains(&pending_rewards.rewards, nonce), error::not_found(ENO_NONCE_NOT_FOUND));
         let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
 
         // Get lootbox
         let lootboxes = borrow_global_mut<Lootboxes>(pending_reward.creator);
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, pending_reward.collection_name);
-
-        // Use random number to select rarity and token
-        let random_num = *vector::borrow(&random_numbers, 0);
         
         // Select rarity based on weights
         let selected_rarity = select_rarity(lootbox, random_num);
@@ -906,18 +907,31 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             selected_token
         );
 
-        // Mint token into resource account
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
+        let user_claim_resource_address = account::create_resource_address(&pending_reward.buyer, user_claim_seed);
+        // If user claim resource account doesn't exist, create it
+        assert!(account::exists_at(user_claim_resource_address), error::not_found(ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS)); 
+        // Get the resource account signer using stored capability
+        let claim_info = borrow_global_mut<UserClaimResourceInfo>(user_claim_resource_address);
+        let user_claim_escrow_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
+        vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifier {
+            creator: lootbox.collection_resource_address,
+            collection: pending_reward.collection_name,
+            name: selected_token
+        });
+
+        // Mint token into collection owner resource account
         let token_minted_id = token::mint_token(
             &collection_signer,
             token_data_id,
             1  // amount
         );
 
-        // Transfer token to buyer
-        token::transfer(
+        // Transfer token to buyer escrow resource account
+        token::direct_transfer(
             &collection_signer,
+            &user_claim_escrow_signer,
             token_minted_id,
-            pending_reward.buyer,
             1 //amount
         );
 
@@ -930,7 +944,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 collection_name: pending_reward.collection_name,
                 selected_token: selected_token,
                 selected_rarity: selected_rarity,
-                random_number: *vector::borrow(&random_numbers, 0),
+                random_number: random_number,
                 timestamp: timestamp::now_microseconds()
             }
         );
