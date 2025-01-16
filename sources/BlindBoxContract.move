@@ -662,7 +662,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         buyer: &signer,
         creator_addr: address,
         collection_name: vector<u8>,
-      ) acquires FixedPriceListing, Lootboxes, PendingRewards {
+      ) acquires FixedPriceListing, Lootboxes, PendingRewards, ResourceInfo {
         let buyer_addr = signer::address_of(buyer);
         let collection_name_str = string::utf8(collection_name);
 
@@ -702,10 +702,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         let callback_address = @projectOwnerAdr;
         let callback_module = string::utf8(b"BlindBoxContract_Crystara_TestV5");
         let callback_function = string::utf8(b"receive_dvrf");
+
+        // Get this module's own resource signer
+        let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
+        let module_resource_signer = account::create_signer_with_capability(&resource_info.signer_cap);
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
-            buyer, 
+            &module_resource_signer, 
             callback_address, 
             callback_module, 
             callback_function, 
