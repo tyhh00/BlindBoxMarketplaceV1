@@ -944,7 +944,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 collection_name: pending_reward.collection_name,
                 selected_token: selected_token,
                 selected_rarity: selected_rarity,
-                random_number: random_number,
+                random_number: random_num,
                 timestamp: timestamp::now_microseconds()
             }
         );
