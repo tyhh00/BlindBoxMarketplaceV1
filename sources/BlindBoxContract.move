@@ -468,7 +468,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
             creator_addr,
             100,
             5, //Royalty Percent
-            token_mutability_settings
+            token_mutability_settings,
             property_keys, 
             property_values,
             property_types,
