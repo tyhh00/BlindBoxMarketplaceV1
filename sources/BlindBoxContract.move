@@ -29,6 +29,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     //DVRF
     use supra_addr::supra_vrf;
 
+    // Constants
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V10";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_v2";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV10";
+
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
     const ENOT_AUTHORIZED: u64 = 1;
@@ -239,7 +244,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        let resource_account_seed = b"LOOTBOX_RESOURCE_V10";
+        let resource_account_seed = RESOURCE_ACCOUNT_SEED;
 
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
         assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
@@ -734,17 +739,27 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         let buyer_addr = signer::address_of(buyer);
         let collection_name_str = string::utf8(collection_name);
 
+        // Check if user has initialized their claim escrow account
+        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
+        let user_claim_resource_address = account::create_resource_address(&buyer_addr, USER_CLAIM_RESOURCE_SEED);        
+        if(!account::exists_at(user_claim_resource_address)){
+            initialize_claim_account(buyer);
+        };
+
         // Fetch the lootbox
         let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
         // Abort if the lootbox dosent exist
         assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
+        // Fetch the lootbox
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        // Check if there is stock and rolls are not maxed out
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
 
+        // Check if price is set
         assert!(exists<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress), error::not_found(EPRICE_NOT_SET_OR_INVALID_COIN_TYPE));
+        // Fetch the price
         let price = borrow_global<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress).price;
-        //Need add checks is type added the same as the runtime version else, dont alllow purchase
 
         // Check buyer's balance
         let buyer_balance = coin::balance<CoinType>(buyer_addr);
@@ -758,6 +773,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         let marketplace_cut_coins = coin::withdraw<CoinType>(buyer, marketplace_cut);
         let creator_cut_coins = coin::withdraw<CoinType>(buyer, creator_cut);
 
+        // Deposit the coins to the creator and marketplace
         supra_account::deposit_coins(lootbox.creator, creator_cut_coins);
         supra_account::deposit_coins(@projectOwnerAdr, marketplace_cut_coins);
 
@@ -765,12 +781,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         lootbox.stock = lootbox.stock - 1;
         lootbox.rolled = lootbox.rolled + 1;
 
-        let buyer_addr = signer::address_of(buyer);
-        let collection_name_str = string::utf8(collection_name);
-
         // Request VRF
         let callback_address = @projectOwnerAdr;
-        let callback_module = string::utf8(b"BlindBoxContract_Crystara_TestV10");
+        let callback_module = string::utf8(CALLBACK_MODULE_NAME);
         let callback_function = string::utf8(b"receive_dvrf");
 
         // Get this module's own resource signer
@@ -986,21 +999,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             selected_token
         );
 
-        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
         let user_claim_resource_address = account::create_resource_address(&pending_reward.buyer, user_claim_seed);
         // If user claim resource account doesn't exist, create it
-        if (!account::exists_at(user_claim_resource_address)) {
-            let (resource_account, resource_signer_cap) = account::create_resource_account(
-            &account::create_signer_with_capability(&lootbox.collection_resource_signer_cap), 
-            user_claim_seed
-            );
-            // Store signer capability in a new resource
-            move_to(&resource_account, UserClaimResourceInfo {
-                resource_signer_cap: resource_signer_cap,
-                resource_signer_address: signer::address_of(&resource_account),
-                claimable_tokens: vector::empty<TokenIdentifier>()
-            });
-        };
+        assert!(account::exists_at(user_claim_resource_address), error::not_found(ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS)); 
         // Get the resource account signer using stored capability
         let claim_info = borrow_global_mut<UserClaimResourceInfo>(user_claim_resource_address);
         let user_claim_escrow_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
@@ -1121,6 +1123,29 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 timestamp: timestamp::now_microseconds()
             }
         );
+    }
+
+    // Initialize claim account function
+    public entry fun initialize_claim_account(
+        user: &signer
+    ) {
+        let user_addr = signer::address_of(user);
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
+        let user_claim_resource_address = account::create_resource_address(&user_addr, user_claim_seed);
+        
+        // Only create if it doesn't exist
+        if (!account::exists_at(user_claim_resource_address)) {
+            let (resource_account, resource_signer_cap) = account::create_resource_account(
+                user,  // Using user's own signer
+                user_claim_seed
+            );
+            
+            move_to(&resource_account, UserClaimResourceInfo {
+                resource_signer_cap: resource_signer_cap,
+                resource_signer_address: signer::address_of(&resource_account),
+                claimable_tokens: vector::empty<TokenIdentifier>()
+            });
+        };
     }
 
     // Claim all tokens function
