@@ -454,9 +454,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV7 {
         let property_types = vector[string::utf8(b"String")];
 
         //Token Mutability Configuration
-        let token_mutability_settings = token::create_token_mutability_config(
-            vector[false, true, true, true, true] //Max Supply, URI, Royalty, Description, Properties
-        )
+         //Max Supply, URI, Royalty, Description, Properties
+        let token_mutability_settings = token::create_token_mutability_config(vector[false, true, true, true, true]);
 
         // Create token metadata in the collection
         token::create_tokendata(
