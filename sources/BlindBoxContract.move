@@ -808,7 +808,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
         );
 
         // Mint token into resource account
-        token::mint_token(
+        let token_minted_id = token::mint_token(
             &collection_signer,
             token_data_id,
             1  // amount
@@ -818,7 +818,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
         token::direct_transfer(
             &collection_signer,
             pending_reward.buyer,
-            token_data_id,
+            token_minted_id,
             1 //amount
         );
 
