@@ -705,7 +705,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
 
         // Get this module's own resource signer
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
-        let module_resource_signer = account::create_signer_with_capability(&resource_info.signer_cap);
+        let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
