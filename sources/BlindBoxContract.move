@@ -118,6 +118,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
     struct Lootbox has store {
       creator: address,
       collectionName: String, // Used to access collection by Creator + CollName in aptos_token::token
+
+      collection_resource_address: address,
+      collection_resource_signer_cap: account::SignerCapability,
+
       // ^ As good as storing the "Collection" Object because thats all we need to access it
       rarities: table::Table<String, u64>, // Map rarity name to weight
       rarities_showItemWhenRoll: table::Table<String, bool>,
