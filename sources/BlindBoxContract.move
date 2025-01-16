@@ -789,7 +789,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       caller_address: address,
       rng_count: u8,
       client_seed: u64,
-    ) acquires PendingRewards, Lootboxes {
+    ) //acquires PendingRewards, Lootboxes 
+    {
         // Verify VRF result
         let random_numbers = supra_vrf::verify_callback(
             nonce, 
