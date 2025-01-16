@@ -1018,7 +1018,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         );
 
         // Transfer token to buyer escrow resource account
-        token::transfer(
+        token::direct_transfer(
             &collection_signer,
             &user_claim_escrow_signer,
             token_minted_id,
