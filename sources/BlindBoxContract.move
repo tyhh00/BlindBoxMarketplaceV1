@@ -59,6 +59,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const ENO_TOKENS_CLAIMED_SUCCESSFULLY: u64 = 25;
     const ENO_TOKENS_CLAIMED_FAILED: u64 = 26;
     const ERESOURCE_ACCOUNT_NOT_EXISTS: u64 = 27;
+    const ENO_NONCE_NOT_FOUND: u64 = 28;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -941,6 +942,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Get pending reward
         let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
+        assert!(table::contains(&pending_rewards.rewards, nonce), error::not_found(ENO_NONCE_NOT_FOUND));
         let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
 
         // Get lootbox
