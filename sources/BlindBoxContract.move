@@ -183,7 +183,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         assert!(!exists<PendingRewards>(signer::address_of(publisher)), error::already_exists(EALREADY_INITIALIZED));
 
         // Create resource account with a seed
-        let (resource_signer, signer_cap) = account::create_resource_account(publisher, b"LOOTBOX_RESOURCE_V8");
+        let (resource_signer, signer_cap) = account::create_resource_account(publisher, b"LOOTBOX_RESOURCE_V9");
         
         // Store signer capability
         move_to(publisher, ResourceInfo {
