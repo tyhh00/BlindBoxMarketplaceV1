@@ -972,7 +972,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             // Store signer capability in a new resource
             move_to(&resource_account, UserClaimResourceInfo {
                 resource_signer_cap: resource_signer_cap,
-                resource_signer_address: resource_account
+                resource_signer_address: account::address_of(&resource_account)
             });
         };
         // Get the resource account signer using stored capability
