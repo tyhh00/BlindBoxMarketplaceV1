@@ -670,7 +670,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
-        assert!(lootbox.maxRolls < lootbox.rolled, error::not_found(EMAX_ROLLS_REACHED) );
+        assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
 
         let FixedPriceListing {
             price,
