@@ -699,7 +699,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         let FixedPriceListing {
             price,
-        } = move_from<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
+        } = borrrow_global<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
 
         // Check buyer's balance
         let buyer_balance = coin::balance<CoinType>(buyer_addr);
