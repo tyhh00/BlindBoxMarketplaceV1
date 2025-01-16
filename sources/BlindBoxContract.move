@@ -58,6 +58,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const ENO_TOKENS_CLAIMED: u64 = 24;
     const ENO_TOKENS_CLAIMED_SUCCESSFULLY: u64 = 25;
     const ENO_TOKENS_CLAIMED_FAILED: u64 = 26;
+    const ERESOURCE_ACCOUNT_NOT_FOUND: u64 = 27;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -994,12 +995,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             // Store signer capability in a new resource
             move_to(&resource_account, UserClaimResourceInfo {
                 resource_signer_cap: resource_signer_cap,
-                resource_signer_address: account::address_of(&resource_account),
+                resource_signer_address: signer::address_of(&resource_account),
                 claimable_tokens: vector::empty()
             });
         };
         // Get the resource account signer using stored capability
-        let claim_info = borrow_global<UserClaimResourceInfo>(user_claim_resource_address);
+        let claim_info = borrow_global_mut<UserClaimResourceInfo>(user_claim_resource_address);
         let user_claim_escrow_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
         vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifier {
             creator: lootbox.collection_resource_address,
@@ -1148,7 +1149,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             error::invalid_state(ENO_TOKENS_TO_CLAIM)
         );
 
-        let resource_signer = account::create_signer_with_capability(&claim_info.signer_cap);
+        let resource_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
         let claimed_tokens = vector::empty<TokenIdentifier>();
         let total_claimed = 0;
 
