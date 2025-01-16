@@ -986,7 +986,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             selected_token
         );
 
-        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED";
+        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
         let user_claim_resource_address = account::create_resource_address(&pending_reward.buyer, user_claim_seed);
         // If user claim resource account doesn't exist, create it
         if (!account::exists_at(user_claim_resource_address)) {
@@ -998,7 +998,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             move_to(&resource_account, UserClaimResourceInfo {
                 resource_signer_cap: resource_signer_cap,
                 resource_signer_address: signer::address_of(&resource_account),
-                claimable_tokens: vector::empty()
+                claimable_tokens: vector::empty<TokenIdentifier>()
             });
         };
         // Get the resource account signer using stored capability
@@ -1129,7 +1129,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         claimer: &signer
     ) acquires UserClaimResourceInfo {
         let claimer_addr = signer::address_of(claimer);
-        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED";
+        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
         let user_claim_resource_address = account::create_resource_address(&claimer_addr, user_claim_seed);
         
         // Check if resource account exists
