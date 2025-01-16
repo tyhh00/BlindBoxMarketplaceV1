@@ -813,6 +813,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
             }
         );
 
+        /*
+
         // Get pending reward
         let pending_rewards = borrow_global_mut<PendingRewards>(@projectOwnerAdr);
         let pending_reward = table::remove(&mut pending_rewards.rewards, nonce);
@@ -886,7 +888,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
                 timestamp: timestamp::now_microseconds()
             }
         );
-
+        */
     }
 
     // Helper function to select rarity based on weights
