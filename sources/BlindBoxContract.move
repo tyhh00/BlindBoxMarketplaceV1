@@ -218,21 +218,23 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
       keys_collection_url: vector<u8>,
     ) acquires Lootboxes {
       let account_addr = signer::address_of(source_account);
-
-      //Check if Underlying Collection Name was used before, also check if collections exists
-      if(exists<token::Collections>(account_addr)) {
-        assert!(
-            !token::check_collection_exists(account_addr, string::utf8(collection_name))
-            , 
-            error::not_found(ECOLLECTION_EXISTS)
-        );
-      };
+      let fresh_account = false;
 
       //Check if Lootboxes Table Exists for Creator, If No, Init Table.
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
         });
+        fresh_account = true;
+      };
+
+      //Check if Underlying Collection Name was used before, also check if collections exists
+      if(!fresh_account) {
+        assert!(
+            !token::check_collection_exists(account_addr, string::utf8(collection_name))
+            , 
+            error::not_found(ECOLLECTION_EXISTS)
+        );
       };
       
       // Convert the vectors to strings
