@@ -433,18 +433,21 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
         // Verify the signer is the creator
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
+        let collection_resource_address = lootbox.collection_resource_address;
+        let collection_resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
         // Generate a new token name
         let token_count = vector::length(&lootbox.tokensInLootbox);
         let token_name_str = generate_token_name(token_count + 1);
 
         // Check if token with this name already exists
         let token_data_id = token::create_token_data_id(
-            creator_addr,
+            collection_resource_address,
             collection_name_str,
             token_name_str
         );
         assert!(
-            !token::check_tokendata_exists(creator_addr, collection_name_str, token_name_str),
+            !token::check_tokendata_exists(collection_resource_address, collection_name_str, token_name_str),
             error::already_exists(ETOKEN_NAME_ALREADY_EXISTS)
         );
         
@@ -467,7 +470,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV9 {
 
         // Create token metadata in the collection
         token::create_tokendata(
-            creator,
+            collection_resource_signer,
             collection_name_str,
             token_name_str,
             string::utf8(b""),
