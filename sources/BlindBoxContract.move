@@ -261,6 +261,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
         creator: account_addr,
         collectionName: collection_name_str,
 
+        collection_resource_address: lootbox_resource_account_addr,
+        collection_resource_signer_cap: lootbox_resource_account_signCapability,
+
         rarities: table::new<String, u64>(),
         rarities_showItemWhenRoll: table::new<String, bool>(),
         rarity_keys: vector::empty<String>(),
@@ -308,7 +311,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
   
       // Create the collection using the new standard
       token::create_collection(
-          source_account,
+          &collection_resource_signer,
           collection_name_str,
           description_str,
           collection_uri_str,
@@ -794,9 +797,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
         
         let selected_token = *vector::borrow(&tokens_of_rarity, token_index_u64);
 
-        // Get resource signer
-        let resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
-        let resource_signer = account::create_signer_with_capability(&resource_info.signer_cap);
+        // Get collection signer
+        let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
 
         // Create token data id
         let token_data_id = token::create_token_data_id(
@@ -805,11 +807,19 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV8 {
             selected_token
         );
 
-        // Mint token to buyer
+        // Mint token into resource account
         token::mint_token(
-            &resource_signer,
+            &collection_signer,
             token_data_id,
             1  // amount
+        );
+
+        // Mint token into buyer
+        token::direct_transfer(
+            &collection_signer,
+            pending_reward.buyer,
+            token_data_id,
+            1 //amount
         );
 
         // Emit distribution event
