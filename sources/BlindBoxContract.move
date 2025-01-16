@@ -65,6 +65,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const ENO_TOKENS_CLAIMED_FAILED: u64 = 26;
     const ERESOURCE_ACCOUNT_NOT_EXISTS: u64 = 27;
     const ENO_NONCE_NOT_FOUND: u64 = 28;
+    const ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS: u64 = 29;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
