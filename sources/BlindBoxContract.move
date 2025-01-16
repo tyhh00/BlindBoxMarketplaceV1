@@ -47,6 +47,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
     const EYOU_ARE_NOT_PROJECT_OWNER: u64 = 13;
     const EINVALID_VECTOR_LENGTH: u64 = 14;  // Empty vectors or invalid lengths
     const EUNSAFE_NUMBER_CONVERSION: u64 = 15; // Overflow or unsafe conversion
+    const ELOOTBOX_NOTEXISTS: u64 = 16;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -690,6 +691,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Fetch the lootbox
         let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        // Abort if the lootbox dosent exist
+        assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
@@ -731,7 +734,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
-            &module_resource_signer, 
+            buyer, //Only works with the blindbox account
+            //&module_resource_signer, awaiting response from VRF team
             callback_address, 
             callback_module, 
             callback_function, 
