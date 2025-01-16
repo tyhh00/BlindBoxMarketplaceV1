@@ -121,6 +121,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         timestamp: u64
     }
 
+    // Add this event struct with your other events
+    #[event]
+    struct PriceUpdatedEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        price: u64,
+        price_coinType: String,
+        timestamp: u64
+    }
+
     // Add event handle to PendingRewards struct
     struct PendingRewards has key {
         rewards: table::Table<u64, PendingReward>,
@@ -914,6 +924,51 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
 
         // Fallback to last rarity
         *vector::borrow(&lootbox.rarity_keys, len - 1)
+    }
+
+    public entry fun set_lootbox_price<CoinType>(
+        creator: &signer,
+        collection_name: vector<u8>,
+        new_price: u64
+    ) acquires Lootboxes, FixedPriceListing {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(
+            table::contains(&lootboxes.lootbox_table, collection_name_str),
+            error::not_found(ELOOTBOX_NOTEXISTS)
+        );
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Get resource signer
+        let resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
+        // If price listing exists, update it, otherwise create new
+        if (exists<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress)) {
+            let price_listing = borrow_global_mut<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
+            price_listing.price = new_price;
+        } else {
+            move_to(&resource_signer, FixedPriceListing<CoinType> {
+                price: new_price,
+            });
+        };
+
+        // Optionally emit an event
+        // Add this event struct at the top with other events if you want to use it
+        event::emit(
+            PriceUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                price: new_price,
+                price_coinType: type_info::type_name<CoinType>(),
+                timestamp: timestamp::now_microseconds()
+            }
+        );
     }
 
 }
