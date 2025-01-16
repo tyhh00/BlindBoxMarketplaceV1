@@ -192,7 +192,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV10 {
         // Store signer capability
         move_to(publisher, ResourceInfo {
             signer_cap: signer_cap,
-            signer_address: signer::address_of(resource_signer)
+            signer_address: &signer::address_of(resource_signer)
         });
         
         //initialize pending rewards
