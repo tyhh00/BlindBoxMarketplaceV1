@@ -1112,7 +1112,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
                     balance
                 );
                 vector::push_back(&mut claimed_tokens, token);
-                total_claimed = total_claimed + 1;
+                total_claimed = total_claimed + balance;
             };
         };
 
