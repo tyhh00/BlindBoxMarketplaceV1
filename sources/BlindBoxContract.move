@@ -31,7 +31,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
 
     // Constants
     const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V12";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_v3";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V12";
     const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV12";
 
     /// Error Codes
