@@ -741,7 +741,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         let collection_name_str = string::utf8(collection_name);
 
         // Check if user has initialized their claim escrow account
-        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
         let user_claim_resource_address = account::create_resource_address(&buyer_addr, USER_CLAIM_RESOURCE_SEED);        
         if(!account::exists_at(user_claim_resource_address)){
             initialize_claim_account(buyer);
