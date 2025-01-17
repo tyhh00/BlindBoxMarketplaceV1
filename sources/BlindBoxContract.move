@@ -66,6 +66,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
     const ERESOURCE_ACCOUNT_NOT_EXISTS: u64 = 27;
     const ENO_NONCE_NOT_FOUND: u64 = 28;
     const ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS: u64 = 29;
+    const ELOOTBOX_NOT_ACTIVE: u64 = 30;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -95,7 +96,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         collection_name: String,
         quantity: u64,
         nonce: u64,
-        timestamp: u64
+        timestamp: u64,
+        price: u64,
+        price_coinType: String,
     }
 
     #[event]
@@ -154,6 +157,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         claim_resource_address: address,
         tokens_claimed: vector<TokenIdentifier>,
         total_tokens: u64,
+        timestamp: u64
+    }
+
+    #[event]
+    struct LootboxStatusUpdatedEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        is_active: bool,
         timestamp: u64
     }
 
@@ -753,6 +764,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
         // Fetch the lootbox
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+
+        // Check if lootbox is active
+        assert!(lootbox.is_active, error::invalid_state(ELOOTBOX_NOT_ACTIVE));
+
         // Check if there is stock and rolls are not maxed out
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
@@ -824,7 +839,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
                 collection_name: collection_name_str,
                 quantity:1,
                 nonce: nonce,
-                timestamp: timestamp::now_microseconds()
+                timestamp: timestamp::now_microseconds(),
+                price: price,
+                price_coinType: type_info::type_name<CoinType>(),
             }
         );
     }
@@ -1127,6 +1144,40 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
             }
         );
     }
+
+    public entry fun set_lootbox_status(
+        creator: &signer,
+        collection_name: vector<u8>,
+        is_active: bool
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(
+            table::contains(&lootboxes.lootbox_table, collection_name_str),
+            error::not_found(ELOOTBOX_NOTEXISTS)
+        );
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Update status
+        lootbox.is_active = is_active;
+
+        // Emit event
+        event::emit(
+            LootboxStatusUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                is_active,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+    }
+
 
 
 }
