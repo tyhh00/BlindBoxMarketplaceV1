@@ -6,7 +6,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
     *
     * - Change the fun init_module resource seed to "LOOTBOX_RESOURCE_V(NEW VERSION)"
     * - Change the callback module name in purchase_lootbox to "BlindBoxContract_Crystara_TestV(NEW VERSION)"
-    *
+    * - Update the BlindBoxAdmin Contract to use the new version seed
     *
     *
     *

@@ -11,7 +11,7 @@ module projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV12 {
     use supra_framework::supra_account;
 
     //Definitions
-    const RESOURCE_SEED: vector<u8> = b"Crystara_TestV11"; // This could be any seed
+    const RESOURCE_SEED: vector<u8> = b"Crystara_TestV12"; // This could be any seed
 
     //Errors
     const EYOU_ARE_NOT_PROJECT_OWNER: u64 = 1;
