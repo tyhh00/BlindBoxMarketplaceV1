@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV13 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
     
     /**
     *
@@ -30,9 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV13 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V13";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V13";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV13";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V14";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V14";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV14";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -119,6 +119,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV13 {
       collection_name: String,
       rarity_names: vector<String>,
       weights: vector<u64>,
+      show_items_on_roll: vector<bool>,
       timestamp: u64
     }
 
@@ -529,6 +530,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV13 {
                 collection_name: lootbox_name_str,
                 rarity_names: lootbox.rarity_keys,
                 weights: rarity_weights,
+                show_items_on_roll: show_items_on_roll,
                 timestamp: timestamp::now_microseconds()
             }
         );
