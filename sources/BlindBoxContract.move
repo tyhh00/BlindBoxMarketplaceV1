@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV13 {
     
     /**
     *
@@ -30,9 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V12";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V12";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV12";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V13";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V13";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV13";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -191,6 +191,13 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
         price_modifies_when_lack_of_certain_rarity: bool,
         rarities_price_modifier_if_sold_out_keys: vector<String>,
         rarities_price_modifier_if_sold_out_values: vector<u64>,
+        timestamp: u64
+    }
+
+    #[event]
+    struct EscrowAccountCreatedEvent has drop, store {
+        owner_address: address,
+        escrow_address: address,
         timestamp: u64
     }
 
@@ -1096,6 +1103,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
                 resource_signer_address: signer::address_of(&resource_account),
                 claimable_tokens: vector::empty<TokenIdentifier>()
             });
+
+            // Emit event
+            event::emit(
+                EscrowAccountCreatedEvent {
+                    owner_address: user_addr,
+                    escrow_address: user_claim_resource_address,
+                    timestamp: timestamp::now_microseconds()
+                }
+            );
         };
     }
 
