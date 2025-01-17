@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV12 {
     
     /**
     *
@@ -30,9 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V11";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V12";
     const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_v3";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV11";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV12";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -165,6 +165,32 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         creator: address,
         collection_name: String,
         is_active: bool,
+        timestamp: u64
+    }
+
+    #[event]
+    struct RequiresKeyUpdateEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        requires_key: bool,
+        timestamp: u64
+    }
+
+    #[event]
+    struct SetKeyCollectionNameEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        key_collection_name: String,
+        timestamp: u64
+    }
+
+    #[event]
+    struct PriceModifierUpdateEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        price_modifies_when_lack_of_certain_rarity: bool,
+        rarities_price_modifier_if_sold_out_keys: vector<String>,
+        rarities_price_modifier_if_sold_out_values: vector<u64>,
         timestamp: u64
     }
 
