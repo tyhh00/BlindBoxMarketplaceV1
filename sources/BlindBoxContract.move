@@ -1062,7 +1062,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV11 {
         claimer: &signer
     ) acquires UserClaimResourceInfo {
         let claimer_addr = signer::address_of(claimer);
-        let user_claim_seed = b"USER_CLAIM_RESOURCE_FIXED_v2";
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
         let user_claim_resource_address = account::create_resource_address(&claimer_addr, user_claim_seed);
         
         // Check if resource account exists
