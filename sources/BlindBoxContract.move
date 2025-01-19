@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
     
     /**
     *
@@ -30,11 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V15"; //Try Not changing this
-
-
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V16";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV16";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V15";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V15";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV15";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
