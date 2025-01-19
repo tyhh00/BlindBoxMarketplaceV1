@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     
     /**
     *
@@ -30,9 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V16";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V16";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV16";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V17";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V17";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV17";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -75,18 +75,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
     
     //Event Types
     #[event]
-    struct CollectionCreatedEvent has copy, drop, store {
-        creator: address,  // Address of the creator
-        collection_name: vector<u8>,  // Name of the collection
-        metadata_uri: vector<u8>,  // Metadata URI
-        timestamp: u64,  // Block timestamp
-    }
-
-    #[event]
     struct LootboxCreatedEvent has copy, drop, store {
         creator: address,
         collection_management_resource_address: address,
         collection_name: vector<u8>,
+        collection_description: vector<u8>,
+        collection_uri: vector<u8>,  // Metadata URI
         price: u64,
         price_coinType: String,
         max_stock: u64,
@@ -468,6 +462,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
       let lootbox_event = LootboxCreatedEvent {
         creator: account_addr,
         collection_name: collection_name,
+        collection_description: description,
+        collection_uri: collection_uri,
         collection_management_resource_address: lootbox_resource_account_addr,
         price: price,
         price_coinType: coin_type_name,
@@ -480,16 +476,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV16 {
         timestamp: timestamp::now_microseconds(), 
       };
       event::emit(lootbox_event);
-
-      // Create the collection creation event
-      let new_event = CollectionCreatedEvent {
-            creator: account_addr,
-            collection_name: collection_name,
-            metadata_uri: collection_uri,
-            timestamp: timestamp::now_microseconds(), 
-        };
-        // Emit the event
-      event::emit(new_event);
     }
 
 
