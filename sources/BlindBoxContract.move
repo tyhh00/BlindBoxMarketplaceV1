@@ -85,6 +85,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
     #[event]
     struct LootboxCreatedEvent has copy, drop, store {
         creator: address,
+        collection_management_resource_address: address,
         collection_name: vector<u8>,
         price: u64,
         price_coinType: String,
@@ -467,6 +468,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
       let lootbox_event = LootboxCreatedEvent {
         creator: account_addr,
         collection_name: collection_name,
+        collection_management_resource_address: lootbox_resource_account_addr,
         price: price,
         price_coinType: coin_type_name,
         max_stock: max_stock,
