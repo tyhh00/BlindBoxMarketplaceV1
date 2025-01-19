@@ -885,8 +885,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
-            //buyer, //Only works with the blindbox account
-            &module_resource_signer, //awaiting response from VRF team
+            buyer, //Only works with the blindbox account
+            //&module_resource_signer, //awaiting response from VRF team
             callback_address, 
             callback_module, 
             callback_function, 
