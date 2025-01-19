@@ -299,7 +299,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        let resource_account_seed = RESOURCE_ACCOUNT_SEED;
+        let resource_account_seed = b"";
 
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
         assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
@@ -318,6 +318,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             rewards: table::new(),
             next_nonce: 0,
         });
+    }
+
+    public entry fun test_signersystem(publisher: &signer) {
+        assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
+        let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
+        if(account::exists_at(resource_address)) {
+            let signer = account::create_authorized_signer(publisher, signer::address_of(publisher));
+            purchase_lootbox(&signer, 0x8c6771f14dd6383272a5bd81022643d5bc41f5556ddbb28d99246b77a99bffac, b"Gamblers Gambit");
+        }
     }
         
     public entry fun create_lootbox<CoinType>(
