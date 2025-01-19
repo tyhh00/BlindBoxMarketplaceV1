@@ -1,4 +1,4 @@
-module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
+module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
     
     /**
     *
@@ -30,9 +30,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
     use supra_addr::supra_vrf;
 
     // Constants
-    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V14";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V14";
-    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV14";
+    const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V15";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V15";
+    const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV15";
 
     /// Error Codes
     /// Action not authorized because the signer is not the admin of this module
@@ -67,6 +67,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
     const ENO_NONCE_NOT_FOUND: u64 = 28;
     const ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS: u64 = 29;
     const ELOOTBOX_NOT_ACTIVE: u64 = 30;
+    const ENOT_WHITELISTED: u64 = 31;
+    const EINSUFFICIENT_WHITELIST_AMOUNT: u64 = 32;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -86,6 +88,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
         collection_name: vector<u8>,
         price: u64,
         price_coinType: String,
+        max_stock: u64,
+        initial_stock: u64,
         timestamp: u64,
     }
 
@@ -166,6 +170,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
         creator: address,
         collection_name: String,
         is_active: bool,
+        is_whitelist_mode: bool,
+        auto_trigger_whitelist_time: u64,  // 0 if not auto-triggered
+        auto_trigger_active_time: u64,  // 0 if not auto-triggered
         timestamp: u64
     }
 
@@ -235,6 +242,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
       
       tokensInLootbox: vector<String>, //Token names
       token_rarity_mapping: table::Table<String, String>, // Map token_name to rarity
+
+      automatically_whitelist_mode_at_time: u64,
+      automatically_active_at_time: u64,
 
       //Not Yet Implemented
       is_active: bool,
@@ -407,6 +417,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
         //Not Yet Implemented
         is_active: false,
         mutable_if_active: false,
+
+        automatically_whitelist_mode_at_time: 0,
+        automatically_active_at_time: 0,
 
         //Not Yet Implemented
         price_modifies_when_lack_of_certain_rarity: false,
@@ -800,8 +813,27 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
         // Fetch the lootbox
         let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
 
+        // Check auto-activation time
+        let current_time = timestamp::now_microseconds();
+        if (lootbox.automatically_active_at_time != 0 && current_time >= lootbox.automatically_active_at_time) {
+            lootbox.is_active = true;
+        };
+
+        // Check auto-whitelist time
+        if (lootbox.automatically_whitelist_mode_at_time != 0 && current_time >= lootbox.automatically_whitelist_mode_at_time) {
+            lootbox.whitelistMode = false;
+        };
+
         // Check if lootbox is active
         assert!(lootbox.is_active, error::invalid_state(ELOOTBOX_NOT_ACTIVE));
+
+        // Check whitelist if enabled
+        let buyer_addr = signer::address_of(buyer);
+        if (lootbox.whitelistMode) {
+            assert!(table::contains(&lootbox.allow_mintList, buyer_addr), error::permission_denied(ENOT_WHITELISTED));
+            let allowed_amount = *table::borrow(&lootbox.allow_mintList, buyer_addr);
+            assert!(allowed_amount >= 1, error::invalid_state(EINSUFFICIENT_WHITELIST_AMOUNT));
+        };
 
         // Check if there is stock and rolls are not maxed out
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
@@ -865,6 +897,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
 
         // Add to pending rewards
         table::add(&mut pending_rewards.rewards, nonce, pending_reward);
+
+        // Update whitelist amount at the end of successful purchase
+        if (lootbox.whitelistMode) {
+            let remaining_amount = *table::borrow(&lootbox.allow_mintList, buyer_addr) - 1;
+            *table::borrow_mut(&mut lootbox.allow_mintList, buyer_addr) = remaining_amount;
+        };
 
         // Emit purchase event
         event::emit(
@@ -1217,11 +1255,130 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV14 {
                 creator: creator_addr,
                 collection_name: collection_name_str,
                 is_active,
+                is_whitelist_mode: lootbox.whitelistMode,
+                auto_trigger_whitelist_time: lootbox.automatically_whitelist_mode_at_time,
+                auto_trigger_active_time: lootbox.automatically_active_at_time,
                 timestamp: timestamp::now_microseconds()
             }
         );
     }
 
+    // Set whitelist status function
+    public entry fun set_whitelist_status(
+        creator: &signer,
+        collection_name: vector<u8>,
+        whitelist_mode: bool
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
 
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        lootbox.whitelistMode = whitelist_mode;
+
+        event::emit(
+            LootboxStatusUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                is_active: lootbox.is_active,
+                is_whitelist_mode: whitelist_mode,
+                auto_trigger_whitelist_time: lootbox.automatically_whitelist_mode_at_time,
+                auto_trigger_active_time: lootbox.automatically_active_at_time,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+    }
+
+    // Set whitelist amounts for addresses
+    public entry fun set_whitelist_amounts(
+        creator: &signer,
+        collection_name: vector<u8>,
+        addresses: vector<address>,
+        amounts: vector<u64>
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        assert!(vector::length(&addresses) == vector::length(&amounts), error::invalid_argument(EINVALID_INPUT_LENGTHS));
+
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        let i = 0;
+        let len = vector::length(&addresses);
+        while (i < len) {
+            let addr = *vector::borrow(&addresses, i);
+            let amount = *vector::borrow(&amounts, i);
+            if (table::contains(&lootbox.allow_mintList, addr)) {
+                *table::borrow_mut(&mut lootbox.allow_mintList, addr) = amount;
+            } else {
+                table::add(&mut lootbox.allow_mintList, addr, amount);
+            };
+            i = i + 1;
+        };
+    }
+
+    // Set auto-activation time
+    public entry fun set_auto_activation_time(
+        creator: &signer,
+        collection_name: vector<u8>,
+        activation_time: u64
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        lootbox.automatically_active_at_time = activation_time;
+
+        event::emit(
+            LootboxStatusUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                is_active: lootbox.is_active,
+                is_whitelist_mode: lootbox.whitelistMode,
+                auto_trigger_whitelist_time: lootbox.automatically_whitelist_mode_at_time,
+                auto_trigger_active_time: activation_time,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+    }
+
+    // Set auto-whitelist time
+    public entry fun set_auto_whitelist_time(
+        creator: &signer,
+        collection_name: vector<u8>,
+        whitelist_time: u64
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(table::contains(&lootboxes.lootbox_table, collection_name_str), error::not_found(ELOOTBOX_NOTEXISTS));
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        lootbox.automatically_whitelist_mode_at_time = whitelist_time;
+
+        event::emit(
+            LootboxStatusUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                is_active: lootbox.is_active,
+                is_whitelist_mode: lootbox.whitelistMode,
+                auto_trigger_whitelist_time: whitelist_time,
+                auto_trigger_active_time: lootbox.automatically_active_at_time,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+    }
 
 }
