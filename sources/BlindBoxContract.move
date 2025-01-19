@@ -90,6 +90,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
         price_coinType: String,
         max_stock: u64,
         initial_stock: u64,
+        is_active: bool,
+        is_whitelist_mode: bool,
+        auto_trigger_whitelist_time: u64,
+        auto_trigger_active_time: u64,
         timestamp: u64,
     }
 
@@ -405,7 +409,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
         maxRolls: max_stock,
         rolled: 0,
 
-        whitelistMode: true,
+        whitelistMode: false,
         allow_mintList: table::new<address, u64>(),
 
         //price: fixed_price_listing,
@@ -465,6 +469,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV15 {
         collection_name: collection_name,
         price: price,
         price_coinType: coin_type_name,
+        max_stock: max_stock,
+        initial_stock: initial_stock,
+        is_active: false,
+        is_whitelist_mode: false,
+        auto_trigger_whitelist_time: 0,
+        auto_trigger_active_time: 0,
         timestamp: timestamp::now_microseconds(), 
       };
       event::emit(lootbox_event);
