@@ -320,12 +320,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         });
     }
 
-    public entry fun test_signersystem(publisher: &signer) {
+    public entry fun test_signersystem<CoinType>(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
         if(account::exists_at(resource_address)) {
             let signer = account::create_authorized_signer(publisher, signer::address_of(publisher));
-            purchase_lootbox(&signer, @0x8c6771f14dd6383272a5bd81022643d5bc41f5556ddbb28d99246b77a99bffac, b"Gamblers Gambit");
+            purchase_lootbox<CoinType>(&signer, @0x8c6771f14dd6383272a5bd81022643d5bc41f5556ddbb28d99246b77a99bffac, b"Gamblers Gambit");
         }
     }
         
