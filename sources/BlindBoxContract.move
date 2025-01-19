@@ -322,7 +322,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     public entry fun test_signersystem<CoinType>(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
+        let resource_account_seed = b"";
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
+        if(!account::exists_at(resource_address)) {
+            let (resource_signer, signer_cap) = account::create_resource_account(publisher, resource_account_seed);
+            move_to(publisher, ResourceInfo {
+                signer_cap: signer_cap,
+                signer_address: signer::address_of(&resource_signer)
+            });
+        };
         if(account::exists_at(resource_address)) {
             let signer = account::create_authorized_signer(publisher, signer::address_of(publisher));
             purchase_lootbox<CoinType>(&signer, @0x8c6771f14dd6383272a5bd81022643d5bc41f5556ddbb28d99246b77a99bffac, b"Gamblers Gambit");
