@@ -392,6 +392,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
       if(!fresh_account) { 
         let lootbox_resource_account_signer = account::create_authorized_signer(source_account, resource_address);
+        let lootbox_resource_account_signCapability = account::create_signer_with_capability(&lootbox_resource_account_signer);
         let lootbox_resource_account_addr = resource_address;
       };
 
