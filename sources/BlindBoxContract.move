@@ -259,6 +259,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     /// Table to store all lootboxes by creator and collection name
     struct Lootboxes has key {
         lootbox_table: table::Table<String, Lootbox>, // Key: collection_name
+        resource_signer_cap: account::SignerCapability,
+        resource_signer_address: address,
     }
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
@@ -295,11 +297,28 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         name: String
     }
 
+    public entry fun set_resource_signer_capability(
+      source_account: &signer,
+      fromLootboxName: vector<u8>, 
+    ) {
+        let account_addr = signer::address_of(source_account);
+        let lootbox_name_str = string::utf8(fromLootboxName);
+
+        let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, lootbox_name_str);
+
+        let resource_signer_cap = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+        let resource_signer_address = signer::address_of(&resource_signer_cap);
+
+        lootboxes.resource_signer_cap = resource_signer_cap;
+        lootboxes.resource_signer_address = resource_signer_address;
+    }
+
     //Entry Functions
     // Initialize the pending rewards storage
     fun init_module(publisher: &signer) {
         assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        let resource_account_seed = b"";
+        let resource_account_seed = RESOURCE_ACCOUNT_SEED;
 
         let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
         assert!(!account::exists_at(resource_address), error::already_exists(EALREADY_INITIALIZED));
@@ -318,23 +337,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             rewards: table::new(),
             next_nonce: 0,
         });
-    }
-
-    public entry fun test_signersystem<CoinType>(publisher: &signer) {
-        assert!(signer::address_of(publisher) == @projectOwnerAdr, error::unauthenticated(EYOU_ARE_NOT_PROJECT_OWNER));
-        let resource_account_seed = b"";
-        let resource_address = account::create_resource_address(&signer::address_of(publisher), resource_account_seed);
-        if(!account::exists_at(resource_address)) {
-            let (resource_signer, signer_cap) = account::create_resource_account(publisher, resource_account_seed);
-            move_to(publisher, ResourceInfo {
-                signer_cap: signer_cap,
-                signer_address: signer::address_of(&resource_signer)
-            });
-        };
-        if(account::exists_at(resource_address)) {
-            let signer = account::create_authorized_signer(publisher, signer::address_of(publisher));
-            purchase_lootbox<CoinType>(&signer, @0x8c6771f14dd6383272a5bd81022643d5bc41f5556ddbb28d99246b77a99bffac, b"Gamblers Gambit");
-        }
     }
         
     public entry fun create_lootbox<CoinType>(
@@ -386,6 +388,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       
       let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
+
+      //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
+      if(!fresh_account) { 
+        lootbox_resource_account_signer = account::create_signer_with_capability(&lootboxes.resource_signer_cap);
+        lootbox_resource_account_addr = lootboxes.resource_signer_address;
+      }; 
+
+      //If fresh account, store the resource signer capability and address in the lootboxes table of the creator for future lootbox creations
+      if(fresh_account) {
+        lootboxes.resource_signer_cap = lootbox_resource_account_signCapability;
+        lootboxes.resource_signer_address = lootbox_resource_account_addr;
+      };
 
       //Check if Underlying Collection Name was used before, also check if collections exists
       //Skip fresh accounts because they wouldnt have a collection yet under their resource account
