@@ -298,7 +298,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         name: String
     }
 
-    /*public entry fun set_resource_signer_capability(
+    public entry fun set_resource_signer_capability(
       source_account: &signer,
       fromLootboxName: vector<u8>, 
     ) {
@@ -311,9 +311,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let resource_signer_cap = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
         let resource_signer_address = signer::address_of(&resource_signer_cap);
 
-        lootboxes.resource_signer_cap = resource_signer_cap;
-        lootboxes.resource_signer_address = resource_signer_address;
-    }*/
+        lootboxes.resource_signer_cap = Option::some(resource_signer_cap);
+        lootboxes.resource_signer_address = Option::some(resource_signer_address);
+    }
 
     //Entry Functions
     // Initialize the pending rewards storage
