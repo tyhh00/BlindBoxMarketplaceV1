@@ -16,6 +16,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use std::vector;
     use std::string::{Self, String};
     use std::error;
+    use std::option::{Self, Option};
     use std::table;
     use std::type_info;
     use supra_framework::account::{Self, SignerCapability};
@@ -259,8 +260,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     /// Table to store all lootboxes by creator and collection name
     struct Lootboxes has key {
         lootbox_table: table::Table<String, Lootbox>, // Key: collection_name
-        resource_signer_cap: account::SignerCapability,
-        resource_signer_address: address,
+        resource_signer_cap: Option<account::SignerCapability>,
+        resource_signer_address: Option<address>,
     }
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
@@ -361,8 +362,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
-            resource_signer_cap: account::SignerCapability::no_capability(),
-            resource_signer_address: address::ZERO,
+            resource_signer_cap: Option::none(),
+            resource_signer_address: Option::none(),
         });
         fresh_account = true;
       };
@@ -393,14 +394,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
       if(!fresh_account) { 
-        lootbox_resource_account_signer = account::create_signer_with_capability(&lootboxes.resource_signer_cap);
-        lootbox_resource_account_addr = lootboxes.resource_signer_address;
+        lootbox_resource_account_signCapability = option::borrow_mut(&lootboxes.resource_signer_cap);
+        lootbox_resource_account_signer = account::create_signer_with_capability(&lootbox_resource_account_signCapability);
       }; 
 
       //If fresh account, store the resource signer capability and address in the lootboxes table of the creator for future lootbox creations
       if(fresh_account) {
-        lootboxes.resource_signer_cap = lootbox_resource_account_signCapability;
-        lootboxes.resource_signer_address = lootbox_resource_account_addr;
+        lootboxes.resource_signer_cap = Option::some(lootbox_resource_account_signCapability);
+        lootboxes.resource_signer_address = Option::some(lootbox_resource_account_addr);
       };
 
       //Check if Underlying Collection Name was used before, also check if collections exists
