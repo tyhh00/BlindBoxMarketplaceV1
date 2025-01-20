@@ -16,7 +16,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use std::vector;
     use std::string::{Self, String};
     use std::error;
-    use std::option::{Self, Option};
     use std::table;
     use std::type_info;
     use supra_framework::account::{Self, SignerCapability};
@@ -260,8 +259,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     /// Table to store all lootboxes by creator and collection name
     struct Lootboxes has key {
         lootbox_table: table::Table<String, Lootbox>, // Key: collection_name
-        resource_signer_cap: Option<account::SignerCapability>,
-        resource_signer_address: Option<address>,
     }
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
@@ -296,23 +293,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         creator: address,
         collection: String,
         name: String
-    }
-
-    public entry fun set_resource_signer_capability(
-      source_account: &signer,
-      fromLootboxName: vector<u8>, 
-    ) {
-        let account_addr = signer::address_of(source_account);
-        let lootbox_name_str = string::utf8(fromLootboxName);
-
-        let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
-        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, lootbox_name_str);
-
-        let resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
-        let resource_signer_address = signer::address_of(&resource_signer);
-
-        lootboxes.resource_signer_cap = option::some(&lootbox.collection_resource_signer_cap);
-        lootboxes.resource_signer_address = option::some(resource_signer_address);
     }
 
     //Entry Functions
@@ -362,8 +342,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
-            resource_signer_cap: option::none(),
-            resource_signer_address: option::none(),
         });
         fresh_account = true;
       };
@@ -392,28 +370,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = account::create_resource_account(source_account, lootbox_resource_account_seed);
       let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
 
-      //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
-      if(!fresh_account) { 
-        lootbox_resource_account_signCapability = option::borrow_mut(lootboxes.resource_signer_cap);
-        lootbox_resource_account_signer = account::create_signer_with_capability(&lootbox_resource_account_signCapability);
-      }; 
+      //Removed Need to Check underlying collection exists because we are creating a new seed and already checked that the new seed dosent exist prior.
 
-      //If fresh account, store the resource signer capability and address in the lootboxes table of the creator for future lootbox creations
-      if(fresh_account) {
-        lootboxes.resource_signer_cap = option::some(lootbox_resource_account_signCapability);
-        lootboxes.resource_signer_address = option::some(lootbox_resource_account_addr);
-      };
-
-      //Check if Underlying Collection Name was used before, also check if collections exists
-      //Skip fresh accounts because they wouldnt have a collection yet under their resource account
-      if(!fresh_account) {
-        assert!(
-            !token::check_collection_exists(lootbox_resource_account_addr, string::utf8(collection_name))
-            , 
-            error::not_found(ECOLLECTION_EXISTS)
-        );
-      };
-      
       // Check exist in global record. If it exist, it will throw an error.
       assert!(!exists<FixedPriceListing<CoinType>>(lootbox_resource_account_addr), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
       
