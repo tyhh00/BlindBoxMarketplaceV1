@@ -311,8 +311,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let resource_signer_cap = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
         let resource_signer_address = signer::address_of(&resource_signer_cap);
 
-        lootboxes.resource_signer_cap = Option::some(resource_signer_cap);
-        lootboxes.resource_signer_address = Option::some(resource_signer_address);
+        lootboxes.resource_signer_cap = option::some(resource_signer_cap);
+        lootboxes.resource_signer_address = option::some(resource_signer_address);
     }
 
     //Entry Functions
@@ -362,8 +362,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
-            resource_signer_cap: Option::none(),
-            resource_signer_address: Option::none(),
+            resource_signer_cap: option::none(),
+            resource_signer_address: option::none(),
         });
         fresh_account = true;
       };
@@ -394,14 +394,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
       if(!fresh_account) { 
-        lootbox_resource_account_signCapability = option::borrow_mut(&lootboxes.resource_signer_cap);
+        lootbox_resource_account_signCapability = option::borrow_mut(&mut lootboxes.resource_signer_cap);
         lootbox_resource_account_signer = account::create_signer_with_capability(&lootbox_resource_account_signCapability);
       }; 
 
       //If fresh account, store the resource signer capability and address in the lootboxes table of the creator for future lootbox creations
       if(fresh_account) {
-        lootboxes.resource_signer_cap = Option::some(lootbox_resource_account_signCapability);
-        lootboxes.resource_signer_address = Option::some(lootbox_resource_account_addr);
+        lootboxes.resource_signer_cap = option::some(lootbox_resource_account_signCapability);
+        lootboxes.resource_signer_address = option::some(lootbox_resource_account_addr);
       };
 
       //Check if Underlying Collection Name was used before, also check if collections exists
