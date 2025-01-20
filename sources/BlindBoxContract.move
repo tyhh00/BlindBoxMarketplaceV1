@@ -393,7 +393,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       if(!fresh_account) { 
         let lootbox_resource_account_signer = account::create_authorized_signer(source_account, resource_address);
         let lootbox_resource_account_addr = resource_address;
-      }
+      };
 
       //Check if Underlying Collection Name was used before, also check if collections exists
       //Skip fresh accounts because they wouldnt have a collection yet under their resource account
