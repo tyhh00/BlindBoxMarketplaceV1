@@ -361,6 +361,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       if (!exists<Lootboxes>(account_addr)) {
         move_to(source_account, Lootboxes {
             lootbox_table: table::new<String, Lootbox>(),
+            resource_signer_cap: account::SignerCapability::no_capability(),
+            resource_signer_address: address::ZERO,
         });
         fresh_account = true;
       };
