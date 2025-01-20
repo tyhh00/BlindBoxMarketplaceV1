@@ -311,7 +311,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
         let resource_signer_address = signer::address_of(&resource_signer);
 
-        lootboxes.resource_signer_cap = option::some(&lootbox.collection_resource_signer_capp);
+        lootboxes.resource_signer_cap = option::some(&lootbox.collection_resource_signer_cap);
         lootboxes.resource_signer_address = option::some(resource_signer_address);
     }
 
