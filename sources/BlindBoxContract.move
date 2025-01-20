@@ -259,8 +259,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     /// Table to store all lootboxes by creator and collection name
     struct Lootboxes has key {
         lootbox_table: table::Table<String, Lootbox>, // Key: collection_name
-        resource_signer_cap: account::SignerCapability,
-        resource_signer_address: address,
+        //resource_signer_cap: account::SignerCapability,
+        //resource_signer_address: address,
     }
 
     #[resource_group_member(group = supra_framework::object::ObjectGroup)]
@@ -297,7 +297,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         name: String
     }
 
-    public entry fun set_resource_signer_capability(
+    /*public entry fun set_resource_signer_capability(
       source_account: &signer,
       fromLootboxName: vector<u8>, 
     ) {
@@ -312,7 +312,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
         lootboxes.resource_signer_cap = resource_signer_cap;
         lootboxes.resource_signer_address = resource_signer_address;
-    }
+    }*/
 
     //Entry Functions
     // Initialize the pending rewards storage
@@ -391,15 +391,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       //If not fresh account, use the resource signer capability and address from the lootboxes table since its stored there on first lootbox creation
       if(!fresh_account) { 
-        lootbox_resource_account_signer = account::create_signer_with_capability(&lootboxes.resource_signer_cap);
-        lootbox_resource_account_addr = lootboxes.resource_signer_address;
-      }; 
-
-      //If fresh account, store the resource signer capability and address in the lootboxes table of the creator for future lootbox creations
-      if(fresh_account) {
-        lootboxes.resource_signer_cap = lootbox_resource_account_signCapability;
-        lootboxes.resource_signer_address = lootbox_resource_account_addr;
-      };
+        let lootbox_resource_account_signer = account::create_authorized_signer(source_account, resource_address);
+        let lootbox_resource_account_addr = resource_address;
+      }
 
       //Check if Underlying Collection Name was used before, also check if collections exists
       //Skip fresh accounts because they wouldnt have a collection yet under their resource account
