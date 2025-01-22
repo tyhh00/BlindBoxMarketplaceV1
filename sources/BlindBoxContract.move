@@ -28,7 +28,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use supra_framework::guid::GUID;
     //DVRF
     use supra_addr::supra_vrf;
-    use 0x186ba2ba88f4a14ca51f6ce42702c7ebdf6bfcf738d897cc98b986ded6f1219e::deposit as dvrf_testnetdeposit;
+    use 0x186ba2ba88f4a14ca51f6ce42702c7ebdf6bfcf738d897cc98b986ded6f1219e::deposit;
 
     // Constants
     const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V17";
@@ -914,10 +914,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     user: &signer,
     amount: u64
     ) {
-        assert(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
+        assert!(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
         
-        let buyer_balance = coin::balance<CoinType>(buyer_addr);
-        assert!(buyer_balance >= price, error::invalid_argument(EINSUFFICIENT_BALANCE));
+        let buyer_balance = coin::balance<CoinType>(signer::address_of(user));
+        assert!(buyer_balance >= amount, error::invalid_argument(EINSUFFICIENT_BALANCE));
 
         // Distribute payment
         let coins = coin::withdraw<CoinType>(user, price);
@@ -925,7 +925,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
 
         coin::deposit(signer::address_of(&module_resource_signer), coins);
-        dvrf_testnetdeposit::deposit_token(&module_resource_signer, amount);
+        deposit::deposit_token(&module_resource_signer, amount);
     }
 
     // Callback function for VRF
