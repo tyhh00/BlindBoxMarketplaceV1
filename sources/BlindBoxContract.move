@@ -28,6 +28,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use supra_framework::guid::GUID;
     //DVRF
     use supra_addr::supra_vrf;
+    use 0x186ba2ba88f4a14ca51f6ce42702c7ebdf6bfcf738d897cc98b986ded6f1219e::deposit as dvrf_testnetdeposit;
 
     // Constants
     const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V17";
@@ -325,9 +326,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       collection_name: vector<u8>,
       description: vector<u8>,
       collection_uri: vector<u8>,
-      maximum_supply: u64,
-      initial_stock: u64,
-      max_stock: u64,
+      maximum_supply: u64, 
+      initial_stock: u64, //Deprecated
+      max_stock: u64, //Deprecated
       price: u64,
 
       requiresKey: bool,
@@ -392,8 +393,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         rarities_showItemWhenRoll: table::new<String, bool>(),
         rarity_keys: vector::empty<String>(),
 
-        stock: initial_stock,
-        maxRolls: max_stock,
+        stock: maximum_supply, //Set to max. Then just use whitelisting to control the stock dsitributions
+        maxRolls: maximum_supply,
         rolled: 0,
 
         whitelistMode: false,
@@ -442,7 +443,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
           collection_name_str,
           description_str,
           collection_uri_str,
-          maximum_supply,
+          maximum_supply, //Follows the max stock of the lootbox
           mutability_settings
       );
 
@@ -459,8 +460,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         collection_management_resource_address: lootbox_resource_account_addr,
         price: price,
         price_coinType: coin_type_name,
-        max_stock: max_stock,
-        initial_stock: initial_stock,
+        max_stock: maximum_supply,
+        initial_stock: maximum_supply,
         is_active: false,
         is_whitelist_mode: false,
         auto_trigger_whitelist_time: 0,
@@ -865,8 +866,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
-            buyer, //Only works with the blindbox account
-            //&module_resource_signer, //awaiting response from VRF team
+            //buyer, //Only works with the blindbox account
+            &module_resource_signer, //awaiting response from VRF team, seems like been approved to use
             callback_address, 
             callback_module, 
             callback_function, 
@@ -907,6 +908,24 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 price_coinType: type_info::type_name<CoinType>(),
             }
         );
+    }
+
+    public entry fun deposit_supra_to_vrf<CoinType>(
+    user: &signer,
+    amount: u64
+    ) {
+        assert(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
+        
+        let buyer_balance = coin::balance<CoinType>(buyer_addr);
+        assert!(buyer_balance >= price, error::invalid_argument(EINSUFFICIENT_BALANCE));
+
+        // Distribute payment
+        let coins = coin::withdraw<CoinType>(user, price);
+        let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
+        let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
+
+        coin::deposit(signer::address_of(&module_resource_signer), coins);
+        dvrf_testnetdeposit::deposit_token(&module_resource_signer, amount);
     }
 
     // Callback function for VRF
@@ -1376,5 +1395,209 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
         module_resource_info.signer_address
     }
+
+    public entry fun add_tokens_to_lootbox(
+        creator: &signer,
+        collection_name: vector<u8>,
+        token_uris: vector<vector<u8>>,
+        rarities: vector<vector<u8>>,
+        max_supplies: vector<u64>
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Verify all input vectors have the same length
+        let len = vector::length(&token_uris);
+        assert!(
+            len == vector::length(&rarities) && 
+            len == vector::length(&max_supplies),
+            error::invalid_argument(EINVALID_INPUT_LENGTHS)
+        );
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        let collection_resource_address = lootbox.collection_resource_address;
+        let collection_resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
+        let i = 0;
+        while (i < len) {
+            // Get values for current token
+            let token_uri = *vector::borrow(&token_uris, i);
+            let rarity = *vector::borrow(&rarities, i);
+            let max_supply = *vector::borrow(&max_supplies, i);
+
+            // Generate token name
+            let token_count = vector::length(&lootbox.tokensInLootbox);
+            let token_name_str = generate_token_name(token_count + 1);
+
+            // Check if token with this name already exists
+            let token_data_id = token::create_token_data_id(
+                collection_resource_address,
+                collection_name_str,
+                token_name_str
+            );
+            assert!(
+                !token::check_tokendata_exists(collection_resource_address, collection_name_str, token_name_str),
+                error::already_exists(ETOKEN_NAME_ALREADY_EXISTS)
+            );
+            
+            // Verify rarity exists in lootbox configuration
+            let rarity_str = string::utf8(rarity);
+            assert!(
+                table::contains(&lootbox.rarities, rarity_str),
+                error::invalid_argument(EINVALID_RARITY)
+            );
+
+            // Set up token properties including rarity
+            let property_keys = vector[string::utf8(b"rarity")];
+            let property_values = vector[rarity];
+            let property_types = vector[string::utf8(b"String")];
+
+            // Token Mutability Configuration
+            let mutability_settings = vector[false, true, true, true, true];
+            let token_mutability_settings = token::create_token_mutability_config(&mutability_settings);
+
+            // Create token metadata in the collection
+            token::create_tokendata(
+                &collection_resource_signer,
+                collection_name_str,
+                token_name_str,
+                string::utf8(b""),
+                max_supply,
+                string::utf8(token_uri),
+                creator_addr,
+                100,
+                5, // Royalty Percent
+                token_mutability_settings,
+                property_keys, 
+                property_values,
+                property_types,
+            );
+
+            // Store token data
+            vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
+            table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
+
+            // Emit event for each token
+            event::emit(
+                TokenAddedEvent {
+                    creator: creator_addr,
+                    collection_name: collection_name_str,
+                    token_name: token_name_str,
+                    token_uri: string::utf8(token_uri),
+                    rarity: rarity_str,
+                    max_supply,
+                    timestamp: timestamp::now_microseconds()
+                }
+            );
+
+            i = i + 1;
+        };
+    }
+
+    public entry fun modify_lootbox_metadata(
+        creator: &signer,
+        collection_name: vector<u8>,
+        new_description: vector<u8>,
+        new_uri: vector<u8>
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Check if Lootboxes exists for creator
+        assert!(exists<Lootboxes>(creator_addr), error::not_found(ELOOTBOX_NOTEXISTS));
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(
+            table::contains(&lootboxes.lootbox_table, collection_name_str),
+            error::not_found(ELOOTBOX_NOTEXISTS)
+        );
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Get collection resource signer
+        let collection_resource_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+
+        // Update collection description if provided
+        if (vector::length(&new_description) > 0) {
+            token::mutate_collection_description(
+                &collection_resource_signer,
+                collection_name_str,
+                string::utf8(new_description)
+            );
+        };
+
+        // Update collection URI if provided
+        if (vector::length(&new_uri) > 0) {
+            token::mutate_collection_uri(
+                &collection_resource_signer,
+                collection_name_str,
+                string::utf8(new_uri)
+            );
+        };
+    }
+
+    /* Possibly never add this, just make the lootbox have the same stock as max supply always. Then just let them use whitelisting to control the stock.
+    #[event]
+    struct LootboxStockUpdatedEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        added_amount: u64,
+        new_total_stock: u64,
+        timestamp: u64
+    }
+
+    public entry fun add_stock_to_lootbox(
+        creator: &signer,
+        collection_name: vector<u8>,
+        add_amount: u64
+    ) acquires Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+
+        // Check if Lootboxes exists for creator
+        assert!(exists<Lootboxes>(creator_addr), error::not_found(ELOOTBOX_NOTEXISTS));
+
+        // Get the lootbox
+        let lootboxes = borrow_global_mut<Lootboxes>(creator_addr);
+        assert!(
+            table::contains(&lootboxes.lootbox_table, collection_name_str),
+            error::not_found(ELOOTBOX_NOTEXISTS)
+        );
+        let lootbox = table::borrow_mut(&mut lootboxes.lootbox_table, collection_name_str);
+        
+        // Verify the signer is the creator
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Check if adding stock would exceed maxRolls
+        assert!(
+            lootbox.rolled + add_amount <= lootbox.maxRolls,
+            error::invalid_argument(EMAX_ROLLS_REACHED)
+        );
+
+        // Add stock
+        lootbox.stock = lootbox.stock + add_amount;
+
+        // Emit event for stock update
+        event::emit(
+            LootboxStockUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                added_amount: add_amount,
+                new_total_stock: lootbox.stock,
+                timestamp: timestamp::now_microseconds()
+            }
+        );
+    }
+
+    */
 
 }
