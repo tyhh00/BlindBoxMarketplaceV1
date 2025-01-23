@@ -864,9 +864,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
-        let nonce = supra_vrf::rng_request(
-            //buyer, //Only works with the blindbox account
-            &module_resource_signer, //awaiting response from VRF team, seems like been approved to use
+        let nonce = supra_vrf::rng_request_from_contract(
+            buyer, //Only works with the blindbox account
+            //&module_resource_signer, //awaiting response from VRF team, seems like been approved to use
             callback_address, 
             callback_module, 
             callback_function, 
@@ -909,7 +909,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         );
     }
 
-    public entry fun deposit_supra_to_vrf<CoinType>(
+    /*public entry fun deposit_supra_to_vrf<CoinType>(
     user: &signer,
     amount: u64
     ) {
@@ -925,7 +925,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
         coin::deposit(signer::address_of(&module_resource_signer), coins);
         supra_vrf::deposit_token(&module_resource_signer, amount);
-    }
+    }*/
 
     // Callback function for VRF
     public entry fun receive_dvrf(
