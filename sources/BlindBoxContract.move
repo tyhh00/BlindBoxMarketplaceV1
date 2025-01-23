@@ -123,7 +123,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       rarity_names: vector<String>,
       weights: vector<u64>,
       show_items_on_roll: vector<bool>,
-      timestamp: u64
+      timestamp: u64,
+      rarity_colors: vector<vector<u8>>
     }
 
     #[event]
@@ -543,7 +544,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 rarity_names: lootbox.rarity_keys,
                 weights: rarity_weights,
                 show_items_on_roll: show_items_on_roll,
-                timestamp: timestamp::now_microseconds()
+                timestamp: timestamp::now_microseconds(),
+                rarity_colors: rarity_colors
             }
         );
     }
