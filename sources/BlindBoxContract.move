@@ -482,7 +482,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       lootbox_name: vector<u8>,
       rarity_names: vector<vector<u8>>,
       rarity_weights: vector<u64>,
-      show_items_on_roll: vector<bool>
+      show_items_on_roll: vector<bool>,
+      rarity_colors: vector<vector<u8>>
     ) acquires Lootboxes {
         let owner_addr = signer::address_of(collection_owner);
         let lootbox_name_str = string::utf8(lootbox_name);
@@ -498,7 +499,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let len = vector::length(&rarity_names);
         assert!(
             len == vector::length(&rarity_weights) && 
-            len == vector::length(&show_items_on_roll),
+            len == vector::length(&show_items_on_roll) &&
+            len == vector::length(&rarity_colors),
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
@@ -512,6 +514,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             if (table::contains(&lootbox.rarities, rarity_name)) {
                 table::remove(&mut lootbox.rarities, rarity_name);
                 table::remove(&mut lootbox.rarities_showItemWhenRoll, rarity_name);
+                table::remove(&mut lootbox.rarityColors, rarity_name);
             };
             i = i + 1;
         };
@@ -522,9 +525,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
             let weight = *vector::borrow(&rarity_weights, i);
             let show_item = *vector::borrow(&show_items_on_roll, i);
+            let color = string::utf8(*vector::borrow(&rarity_colors, i));
 
             table::add(&mut lootbox.rarities, rarity_name, weight);
             table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
+            table::add(&mut lootbox.rarityColors, rarity_name, color);
             vector::push_back(&mut lootbox.rarity_keys, rarity_name);
             
             i = i + 1;
