@@ -909,7 +909,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         );
     }
 
-    /*public entry fun deposit_supra_to_vrf<CoinType>(
+    public entry fun deposit_supra_to_vrf<CoinType>(
     user: &signer,
     amount: u64
     ) {
@@ -924,8 +924,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
 
         coin::deposit(signer::address_of(&module_resource_signer), coins);
-        deposit::deposit_token(&module_resource_signer, amount);
-    }*/
+        supra_vrf::deposit_token(&module_resource_signer, amount);
+    }
 
     // Callback function for VRF
     public entry fun receive_dvrf(
