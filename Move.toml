@@ -19,8 +19,8 @@ git = "https://github.com/Entropy-Foundation/aptos-core.git"
 rev = "dev"
 subdir = "aptos-move/framework/aptos-token"
 
-#[dependencies]
-#SupraVrf = { git = "https://github.com/Entropy-Foundation/vrf-interface", subdir = "supra/testnet", rev = "testnet"  }           
-
 [dependencies]
-SupraVrf = { local = "sources/supra-vrf/testnet"  }
+SupraVrf = { git = "https://github.com/Entropy-Foundation/vrf-interface", subdir = "supra/testnet", rev = "testnet"  }           
+
+#[dependencies]
+#SupraVrf = { local = "sources/supra-vrf/testnet"  }
