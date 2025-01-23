@@ -23,4 +23,4 @@ subdir = "aptos-move/framework/aptos-token"
 #SupraVrf = { git = "https://github.com/Entropy-Foundation/vrf-interface", subdir = "supra/testnet", rev = "testnet"  }           
 
 [dependencies]
-SupraVrf = { local = "./supra-vrf/testnet"  }
+SupraVrf = { local = "sources/supra-vrf/testnet"  }
