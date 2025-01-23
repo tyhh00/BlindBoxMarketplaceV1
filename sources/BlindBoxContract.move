@@ -864,7 +864,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
-        let nonce = supra_vrf::rng_request_from_contract(
+        let nonce = supra_vrf::rng_request(
             buyer, //Only works with the blindbox account
             //&module_resource_signer, //awaiting response from VRF team, seems like been approved to use
             callback_address, 
