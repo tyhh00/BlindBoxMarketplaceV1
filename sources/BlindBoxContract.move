@@ -419,6 +419,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         //Not Yet Implemented
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
+
+        rarityColors: table::new<String, String>(),
         
       };
 
