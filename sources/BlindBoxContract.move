@@ -123,8 +123,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       rarity_names: vector<String>,
       weights: vector<u64>,
       show_items_on_roll: vector<bool>,
-      timestamp: u64,
-      rarity_colors: vector<vector<u8>>
+      timestamp: u64
     }
 
     #[event]
@@ -255,8 +254,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       price_modifies_when_lack_of_certain_rarity: bool, //If true, the price will increase if the certain rarity is sold out
       rarities_price_modifier_if_sold_out: table::Table<String, u64>, //Map rarity to price modifier
-
-      rarityColors: table::Table<String, String>, //Map rarity to color
     }
 
     /// Table to store all lootboxes by creator and collection name
@@ -422,8 +419,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         //Not Yet Implemented
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
-
-        rarityColors: table::new<String, String>(),
+        
         
       };
 
@@ -483,8 +479,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       lootbox_name: vector<u8>,
       rarity_names: vector<vector<u8>>,
       rarity_weights: vector<u64>,
-      show_items_on_roll: vector<bool>,
-      rarity_colors: vector<vector<u8>>
+      show_items_on_roll: vector<bool>
     ) acquires Lootboxes {
         let owner_addr = signer::address_of(collection_owner);
         let lootbox_name_str = string::utf8(lootbox_name);
@@ -500,8 +495,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let len = vector::length(&rarity_names);
         assert!(
             len == vector::length(&rarity_weights) && 
-            len == vector::length(&show_items_on_roll) &&
-            len == vector::length(&rarity_colors),
+            len == vector::length(&show_items_on_roll),
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
 
@@ -515,7 +509,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             if (table::contains(&lootbox.rarities, rarity_name)) {
                 table::remove(&mut lootbox.rarities, rarity_name);
                 table::remove(&mut lootbox.rarities_showItemWhenRoll, rarity_name);
-                table::remove(&mut lootbox.rarityColors, rarity_name);
             };
             i = i + 1;
         };
@@ -526,11 +519,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
             let weight = *vector::borrow(&rarity_weights, i);
             let show_item = *vector::borrow(&show_items_on_roll, i);
-            let color = string::utf8(*vector::borrow(&rarity_colors, i));
 
             table::add(&mut lootbox.rarities, rarity_name, weight);
             table::add(&mut lootbox.rarities_showItemWhenRoll, rarity_name, show_item);
-            table::add(&mut lootbox.rarityColors, rarity_name, color);
             vector::push_back(&mut lootbox.rarity_keys, rarity_name);
             
             i = i + 1;
@@ -544,8 +535,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 rarity_names: lootbox.rarity_keys,
                 weights: rarity_weights,
                 show_items_on_roll: show_items_on_roll,
-                timestamp: timestamp::now_microseconds(),
-                rarity_colors: rarity_colors
+                timestamp: timestamp::now_microseconds()
             }
         );
     }
