@@ -254,6 +254,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       price_modifies_when_lack_of_certain_rarity: bool, //If true, the price will increase if the certain rarity is sold out
       rarities_price_modifier_if_sold_out: table::Table<String, u64>, //Map rarity to price modifier
+
+      rarityColors: table::Table<String, String>, //Map rarity to color
     }
 
     /// Table to store all lootboxes by creator and collection name
