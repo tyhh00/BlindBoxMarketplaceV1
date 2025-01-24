@@ -17,6 +17,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use std::string::{Self, String};
     use std::error;
     use std::print;
+    use std::debug;
     use std::table;
     use std::type_info;
     use supra_framework::account::{Self, SignerCapability};
@@ -865,7 +866,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
-        print!("Module resource signer: {}", signer::address_of(&module_resource_signer));
+        debug::print(&b"module resource signer: ");
+        debug::print(&signer::address_of(&module_resource_signer));
 
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
