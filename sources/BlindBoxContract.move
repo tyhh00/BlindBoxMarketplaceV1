@@ -338,7 +338,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
 
         coin::deposit(signer::address_of(&module_resource_signer), coins);
-        deposit::deposit_token(&module_resource_signer, amount);
+        deposit::deposit_fund(&module_resource_signer, amount);
     }
 
     public entry fun add_contract_to_vrf_whitelist(
