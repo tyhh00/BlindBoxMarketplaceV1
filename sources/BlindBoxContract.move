@@ -362,7 +362,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
 
-        deposit::add_contract_to_whitelist(&module_resource_signer, contract_address);
+        deposit::add_contract_to_whitelist(&module_resource_signer, @projectOwnerAdr);
     }
 
 
