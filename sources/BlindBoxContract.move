@@ -326,7 +326,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     public entry fun deposit_supra_to_vrf<CoinType>(
     user: &signer,
     amount: u64
-    ) {
+    ) acquires ResourceInfo {
         assert!(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
         
         let buyer_balance = coin::balance<CoinType>(signer::address_of(user));
@@ -344,7 +344,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     public entry fun add_contract_to_vrf_whitelist(
         user: &signer,
         contract_address: address
-    ){
+    ) acquires ResourceInfo {
         assert!(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
 
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
