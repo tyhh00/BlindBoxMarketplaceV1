@@ -16,7 +16,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     use std::vector;
     use std::string::{Self, String};
     use std::error;
-    use std::print;
     use std::debug;
     use std::table;
     use std::type_info;
