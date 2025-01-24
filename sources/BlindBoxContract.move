@@ -323,7 +323,25 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         });
     }
 
-    public entry fun deposit_supra_to_vrf(
+    public entry fun deposit_supra_to_vrf<CoinType>(
+    user: &signer,
+    amount: u64
+    ) acquires ResourceInfo {
+        assert!(signer::address_of(user) == @projectOwnerAdr, error::permission_denied(ENOT_AUTHORIZED));
+        
+        let buyer_balance = coin::balance<CoinType>(signer::address_of(user));
+        assert!(buyer_balance >= amount, error::invalid_argument(EINSUFFICIENT_BALANCE));
+
+        // Distribute payment
+        let coins = coin::withdraw<CoinType>(user, amount);
+        let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
+        let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
+
+        coin::deposit(signer::address_of(&module_resource_signer), coins);
+        deposit::deposit_fund(&module_resource_signer, amount);
+    }
+
+        public entry fun deposit_supra_to_vrf_v2(
     user: &signer,
     amount: u64
     ) acquires ResourceInfo {
