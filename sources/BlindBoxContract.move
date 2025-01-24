@@ -70,6 +70,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     const ELOOTBOX_NOT_ACTIVE: u64 = 30;
     const ENOT_WHITELISTED: u64 = 31;
     const EINSUFFICIENT_WHITELIST_AMOUNT: u64 = 32;
+    const EINVALID_MODULE_RESOURCE_SIGNER: u64 = 33;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -865,8 +866,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
-        debug::print(b"module resource signer: ");
-        //debug::print(signer::address_of(&module_resource_signer));
+        debug::print(&b"module resource signer: ");
+        assert!(signer::address_of(&module_resource_signer), error::invalid_state(EINVALID_MODULE_RESOURCE_SIGNER));
+
 
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
         let nonce = supra_vrf::rng_request(
