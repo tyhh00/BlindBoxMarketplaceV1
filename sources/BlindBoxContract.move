@@ -867,7 +867,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let module_resource_signer = account::create_signer_with_capability(&module_resource_info.signer_cap);
         
         debug::print(&b"module resource signer: ");
-        assert!(signer::address_of(&module_resource_signer), error::invalid_state(EINVALID_MODULE_RESOURCE_SIGNER));
+        assert!(signer::address_of(&module_resource_signer) == @v17_resource_addr, error::invalid_state(EINVALID_MODULE_RESOURCE_SIGNER));
 
 
         let client_seed = timestamp::now_microseconds();  // Use timestamp as seed
