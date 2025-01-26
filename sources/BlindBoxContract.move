@@ -323,6 +323,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         });
     }
 
+    //DEPRECATED
     public entry fun deposit_supra_to_vrf<CoinType>(
     user: &signer,
     amount: u64
@@ -341,7 +342,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         deposit::deposit_fund(&module_resource_signer, amount);
     }
 
-        public entry fun deposit_supra_to_vrf_v2(
+    public entry fun deposit_supra_to_vrf_v2(
     user: &signer,
     amount: u64
     ) acquires ResourceInfo {
@@ -1595,7 +1596,34 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         };
     }
 
+    //DEPRECATED
     public entry fun create_lootbox_with_rarities<CoinType>(
+        source_account: &signer,
+        collection_name: vector<u8>,
+        description: vector<u8>,
+        collection_uri: vector<u8>,
+        maximum_supply: u64,
+        price: u64,
+        requiresKey: bool,
+        keys_collection_name: vector<u8>,
+        keys_collection_description: vector<u8>,
+        keys_collection_url: vector<u8>,
+        // Rarity parameters
+        rarity_names: vector<vector<u8>>,
+        rarity_weights: vector<u64>,
+        show_items_on_roll: vector<bool>
+    ) acquires Lootboxes {     
+        // Check lootbox doesn't already exist if table exists
+        if (!fresh_account) {
+            let lootboxes = borrow_global<Lootboxes>(account_addr);
+            assert!(
+                !table::contains(&lootboxes.lootbox_table, collection_name_str),
+                error::already_exists(ELOOTBOX_EXISTS)
+            );
+        };
+    }
+
+    public entry fun create_lootbox_with_rarities_v2<CoinType>(
         source_account: &signer,
         collection_name: vector<u8>,
         description: vector<u8>,
@@ -1640,6 +1668,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             show_items_on_roll
         );
     }
+
 
     /* Possibly never add this, just make the lootbox have the same stock as max supply always. Then just let them use whitelisting to control the stock.
     #[event]
