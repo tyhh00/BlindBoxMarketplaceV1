@@ -1611,159 +1611,38 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         rarity_weights: vector<u64>,
         show_items_on_roll: vector<bool>
     ) acquires Lootboxes {
-        let account_addr = signer::address_of(source_account);
-        
-        // Validate all inputs first
+        // Do all validations first
         let collection_name_str = string::utf8(collection_name);
-        let description_str = string::utf8(description);
-        let collection_uri_str = string::utf8(collection_uri);
         
-        // Check vector lengths match for rarity inputs
+        // Validate rarity inputs
         let rarity_len = vector::length(&rarity_names);
         assert!(
             rarity_len == vector::length(&rarity_weights) && 
             rarity_len == vector::length(&show_items_on_roll),
             error::invalid_argument(EINVALID_INPUT_LENGTHS)
         );
-        
-        // Check if Lootboxes Table Exists for Creator
-        let fresh_account = !exists<Lootboxes>(account_addr);
-        
-        // Check lootbox doesn't already exist if table exists
-        if (!fresh_account) {
-            let lootboxes = borrow_global<Lootboxes>(account_addr);
-            assert!(
-                !table::contains(&lootboxes.lootbox_table, collection_name_str),
-                error::already_exists(ELOOTBOX_EXISTS)
-            );
-        };
 
-        // Check resource account doesn't exist
-        let lootbox_resource_account_seed = vector::empty<u8>(); 
-        vector::append(&mut lootbox_resource_account_seed, b"Lootbox");
-        vector::append(&mut lootbox_resource_account_seed, collection_name);
-        vector::append(&mut lootbox_resource_account_seed, CALLBACK_MODULE_NAME);
-        
-        let resource_address = account::create_resource_address(&account_addr, lootbox_resource_account_seed);
-        assert!(!account::exists_at(resource_address), error::already_exists(ERESOURCE_FORFIXEDPRICE_EXISTS));
-
-        // After all validations pass, start creating resources
-        
-        // Create Lootboxes table if needed
-        if (fresh_account) {
-            move_to(source_account, Lootboxes {
-                lootbox_table: table::new<String, Lootbox>(),
-            });
-        };
-        
-        // Create resource account
-        let (lootbox_resource_account_signer, lootbox_resource_account_signCapability) = 
-            account::create_resource_account(source_account, lootbox_resource_account_seed);
-        let lootbox_resource_account_addr = signer::address_of(&lootbox_resource_account_signer);
-
-        // Create fixed price listing
-        let fixed_price_listing = FixedPriceListing<CoinType> {
-            price,
-        };
-        move_to(&lootbox_resource_account_signer, fixed_price_listing);
-
-        // Create rarities tables and populate
-        let rarities = table::new<String, u64>();
-        let rarities_showItemWhenRoll = table::new<String, bool>();
-        let rarity_keys = vector::empty<String>();
-        
-        let i = 0;
-        while (i < rarity_len) {
-            let rarity_name = string::utf8(*vector::borrow(&rarity_names, i));
-            let weight = *vector::borrow(&rarity_weights, i);
-            let show_item = *vector::borrow(&show_items_on_roll, i);
-            
-            table::add(&mut rarities, rarity_name, weight);
-            table::add(&mut rarities_showItemWhenRoll, rarity_name, show_item);
-            vector::push_back(&mut rarity_keys, rarity_name);
-            
-            i = i + 1;
-        };
-
-        // Create new lootbox
-        let new_lootbox = Lootbox {
-            creator: account_addr,
-            collectionName: collection_name_str,
-            collection_resource_address: lootbox_resource_account_addr,
-            collection_resource_signer_cap: lootbox_resource_account_signCapability,
-            rarities,
-            rarities_showItemWhenRoll,
-            rarity_keys,
-            stock: maximum_supply,
-            maxRolls: maximum_supply,
-            rolled: 0,
-            whitelistMode: false,
-            allow_mintList: table::new<address, u64>(),
-            priceResourceAddress: lootbox_resource_account_addr,
-            tokensInLootbox: vector::empty<String>(),
-            token_rarity_mapping: table::new<String, String>(),
-            automatically_whitelist_mode_at_time: 0,
-            automatically_active_at_time: 0,
-            is_active: false,
-            mutable_if_active: false,
-            requiresKey,
-            keysCollectionName: string::utf8(keys_collection_name),
-            price_modifies_when_lack_of_certain_rarity: false,
-            rarities_price_modifier_if_sold_out: table::new<String, u64>(),
-        };
-
-        // Add lootbox to table
-        let lootboxes = borrow_global_mut<Lootboxes>(account_addr);
-        table::add(&mut lootboxes.lootbox_table, collection_name_str, new_lootbox);
-
-        // Create the collection
-        let mutability_settings = vector::empty<bool>();
-        vector::push_back(&mut mutability_settings, true); //Description
-        vector::push_back(&mut mutability_settings, true); //URI
-        vector::push_back(&mut mutability_settings, true); //Maximum
-
-        token::create_collection(
-            &lootbox_resource_account_signer,
-            collection_name_str,
-            description_str,
-            collection_uri_str,
+        // Call create_lootbox first
+        create_lootbox<CoinType>(
+            source_account,
+            collection_name,
+            description,
+            collection_uri,
             maximum_supply,
-            mutability_settings
+            price,
+            requiresKey,
+            keys_collection_name,
+            keys_collection_description,
+            keys_collection_url
         );
 
-        // Get the type name of CoinType
-        let coin_type_name = type_info::type_name<CoinType>();
-        
-        // Emit lootbox created event
-        event::emit(
-            LootboxCreatedEvent {
-                creator: account_addr,
-                collection_name: collection_name,
-                collection_description: description,
-                collection_uri: collection_uri,
-                collection_management_resource_address: lootbox_resource_account_addr,
-                price,
-                price_coinType: coin_type_name,
-                max_stock: maximum_supply,
-                initial_stock: maximum_supply,
-                is_active: false,
-                is_whitelist_mode: false,
-                auto_trigger_whitelist_time: 0,
-                auto_trigger_active_time: 0,
-                timestamp: timestamp::now_microseconds(), 
-            }
-        );
-
-        // Emit rarities set event
-        event::emit(
-            RaritiesSetEvent {
-                creator: account_addr,
-                collection_name: collection_name_str,
-                rarity_names: rarity_keys,
-                weights: rarity_weights,
-                show_items_on_roll,
-                timestamp: timestamp::now_microseconds()
-            }
+        // Then set rarities
+        set_rarities(
+            source_account,
+            collection_name,
+            rarity_names,
+            rarity_weights,
+            show_items_on_roll
         );
     }
 
