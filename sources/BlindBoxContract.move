@@ -1601,6 +1601,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         description: vector<u8>,
         collection_uri: vector<u8>,
         maximum_supply: u64,
+        initial_stock: u64,
+        max_stock: u64,
         price: u64,
         requiresKey: bool,
         keys_collection_name: vector<u8>,
@@ -1611,24 +1613,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         rarity_weights: vector<u64>,
         show_items_on_roll: vector<bool>
     ) acquires Lootboxes {
-        // Do all validations first
-        let collection_name_str = string::utf8(collection_name);
-        
-        // Validate rarity inputs
-        let rarity_len = vector::length(&rarity_names);
-        assert!(
-            rarity_len == vector::length(&rarity_weights) && 
-            rarity_len == vector::length(&show_items_on_roll),
-            error::invalid_argument(EINVALID_INPUT_LENGTHS)
-        );
+        // Validations...
 
-        // Call create_lootbox first
+        // Call create_lootbox with all parameters
         create_lootbox<CoinType>(
             source_account,
             collection_name,
             description,
             collection_uri,
             maximum_supply,
+            initial_stock,
+            max_stock,
             price,
             requiresKey,
             keys_collection_name,
@@ -1636,7 +1631,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             keys_collection_url
         );
 
-        // Then set rarities
+        // Set rarities...
         set_rarities(
             source_account,
             collection_name,
