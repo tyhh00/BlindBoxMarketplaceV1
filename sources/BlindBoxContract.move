@@ -1614,6 +1614,18 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         show_items_on_roll: vector<bool>
     ) acquires Lootboxes {     
         // Check lootbox doesn't already exist if table exists
+        let account_addr = signer::address_of(source_account);
+        let fresh_account = false;
+
+        //Check if Lootboxes Table Exists for Creator, If No, Init Table.
+        if (!exists<Lootboxes>(account_addr)) {
+            fresh_account = true;
+        };
+        
+        // Convert the vectors to strings
+        let collection_name_str = string::utf8(collection_name);
+        let description_str = string::utf8(description);
+        let collection_uri_str = string::utf8(collection_uri);
         if (!fresh_account) {
             let lootboxes = borrow_global<Lootboxes>(account_addr);
             assert!(
