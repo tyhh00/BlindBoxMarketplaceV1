@@ -1447,6 +1447,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         module_resource_info.signer_address
     }
 
+    #[view]
+    public fun get_escrow_claim_address(user_address: address): address {
+        let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
+        account::create_resource_address(&user_address, user_claim_seed)
+    }
+
+
+
     public entry fun add_tokens_to_lootbox(
         creator: &signer,
         collection_name: vector<u8>,
