@@ -1454,7 +1454,92 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         account::create_resource_address(&user_address, user_claim_seed)
     }
 
+    // ... existing code ...
 
+    #[view]
+    public fun get_lootbox_price<CoinType>(
+        creator_addr: address,
+        collection_name: String
+    ): u64 acquires Lootboxes, FixedPriceListing {
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name);
+        let price_listing = borrow_global<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress);
+        price_listing.price
+    }
+
+    #[view]
+    public fun get_lootbox_status(
+        creator_addr: address,
+        collection_name: String
+    ): (u64, u64, bool, bool) acquires Lootboxes {
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name);
+        
+        let current_time = timestamp::now_microseconds();
+        let time_till_active = if (lootbox.automatically_active_at_time > current_time) {
+            lootbox.automatically_active_at_time - current_time
+        } else {
+            0
+        };
+        
+        let time_till_whitelist = if (lootbox.automatically_whitelist_mode_at_time > current_time) {
+            lootbox.automatically_whitelist_mode_at_time - current_time
+        } else {
+            0
+        };
+
+        (time_till_active, time_till_whitelist, lootbox.is_active, lootbox.whitelistMode)
+    }
+
+    #[view]
+    public fun get_lootbox_rarities(
+        creator_addr: address,
+        collection_name: String
+    ): (vector<String>, vector<u64>, vector<bool>) acquires Lootboxes {
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name);
+        
+        let rarity_names = lootbox.rarity_keys;
+        let weights = vector::empty<u64>();
+        let show_items = vector::empty<bool>();
+        
+        let i = 0;
+        let len = vector::length(&rarity_names);
+        while (i < len) {
+            let rarity = vector::borrow(&rarity_names, i);
+            vector::push_back(&mut weights, *table::borrow(&lootbox.rarities, *rarity));
+            vector::push_back(&mut show_items, *table::borrow(&lootbox.rarities_showItemWhenRoll, *rarity));
+            i = i + 1;
+        };
+        
+        (rarity_names, weights, show_items)
+    }
+
+    #[view]
+    public fun get_lootbox_rolled(
+        creator_addr: address,
+        collection_name: String
+    ): u64 acquires Lootboxes {
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name);
+        lootbox.rolled
+    }
+
+    #[view]
+    public fun get_lootbox_maxsupply(
+        creator_addr: address,
+        collection_name: String
+    ): u64 acquires Lootboxes {
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name);
+        lootbox.maxRolls
+    }
+
+    #[view]
+    public fun get_effective_dvrf_balance(): u64 acquires ResourceInfo {
+        let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
+        deposit::get_fund_balance(module_resource_info.signer_address)
+    }
 
     public entry fun add_tokens_to_lootbox(
         creator: &signer,
