@@ -656,6 +656,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             property_types,
         );
 
+
         // Store token data id only
         vector::push_back(&mut lootbox.tokensInLootbox, token_name_str);
         table::add(&mut lootbox.token_rarity_mapping, token_name_str, rarity_str);
