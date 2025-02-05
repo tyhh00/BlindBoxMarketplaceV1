@@ -1535,12 +1535,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         lootbox.maxRolls
     }
 
-    #[view]
-    public fun get_effective_dvrf_balance(): u64 acquires ResourceInfo {
-        let module_resource_info = borrow_global<ResourceInfo>(@projectOwnerAdr);
-        deposit::check_effective_balance(module_resource_info.signer_address)
-    }
-
     public entry fun add_tokens_to_lootbox(
         creator: &signer,
         collection_name: vector<u8>,
