@@ -912,7 +912,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         if (dynamic_seed == option::none()) {
             let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
             // Store seed in extension
-            set_lootbox_extension_bool(&collection_signer, collection_name, b"dynamic_seed_enabled", true);
+            internal_set_lootbox_extension_bool(&collection_signer, collection_name_str, string::utf8(b"dynamic_seed_enabled"), true);
         };
 
         // Check if price is set
