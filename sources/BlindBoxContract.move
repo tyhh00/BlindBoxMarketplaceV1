@@ -784,9 +784,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 if (maxSupply != 0) {
                     if(curSupply >= maxSupply) {
                         continue;
-                    }
-                }
-            }
+                    };
+                };
+            };
 
             vector::push_back(&mut tokens_of_rarity, token_name);
           };
