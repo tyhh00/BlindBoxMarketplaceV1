@@ -773,9 +773,25 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
           
           // If token has matching rarity, add its name to our result vector
           if (token_rarity == rarity) {
-              vector::push_back(&mut tokens_of_rarity, token_name);
+              let token_data_id = token::create_token_data_id(
+                lootbox.collection_resource_address,
+                collection_name_str,
+                token_name_str
+            );
+            let curSupply = token::get_token_supply(lootbox.collection_resource_address, token_data_id);
+            if(curSupply != option::none()) {
+                let maxSupply = token::get_tokendata_maximum(token_data_id);
+                if (maxSupply != 0) {
+                    if(curSupply >= maxSupply) {
+                        continue;
+                    }
+                }
+            }
+
+            vector::push_back(&mut tokens_of_rarity, token_name);
           };
           
+
           i = i + 1;
       };
     
