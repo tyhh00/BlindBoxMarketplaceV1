@@ -469,7 +469,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
         
-        
+        dynamic_seed_generation: true,
       };
 
       // Borrow a mutable reference to the `Lootboxes` resource
