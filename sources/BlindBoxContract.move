@@ -775,8 +775,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
           if (token_rarity == rarity) {
               let token_data_id = token::create_token_data_id(
                 lootbox.collection_resource_address,
-                collection_name_str,
-                token_name_str
+                lootbox.collectionName,
+                token_name
             );
             let curSupply = token::get_token_supply(lootbox.collection_resource_address, token_data_id);
             if(curSupply != option::none()) {
