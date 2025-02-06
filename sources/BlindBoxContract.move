@@ -1122,8 +1122,14 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 string::utf8(b"rarity"),
                 string::utf8(b"seed"),
                 ];
-            let property_values = vector[selected_rarity, random_num];
-            let property_types = vector[string::utf8(b"String"), string::utf8(b"u256")];
+            let property_values = vector[
+                bcs::to_bytes(&selected_rarity), 
+                bcs::to_bytes(&random_num),
+                ];
+            let property_types = vector[
+                string::utf8(b"String"),
+                string::utf8(b"u256")
+                ];
             token_minted_id = token::mutate_one_token(
                 &collection_signer,
                 signer::address_of(&collection_signer),
