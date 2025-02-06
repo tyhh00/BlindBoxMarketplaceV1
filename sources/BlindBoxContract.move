@@ -2151,7 +2151,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
-        internal_set_lootbox_extension_string(creator_addr, collection_name_str, key_str, value_str);
+        internal_set_lootbox_extension_string(creator, collection_name_str, key_str, value_str);
     }
 
     public entry fun set_lootbox_extension_bool(
@@ -2169,8 +2169,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
-        internal_set_lootbox_extension_bool(creator_addr, collection_name_str, key_str, value);
+        internal_set_lootbox_extension_bool(creator, collection_name_str, key_str, value);
     }
+
 
     public entry fun set_lootbox_extension_u64(
         creator: &signer,
@@ -2187,7 +2188,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
-        internal_set_lootbox_extension_u64(creator_addr, collection_name_str, key_str, value);
+        internal_set_lootbox_extension_u64(creator, collection_name_str, key_str, value);
+
     }
 
     public entry fun set_lootbox_extension_u256(
@@ -2205,6 +2207,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
         assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
 
-        internal_set_lootbox_extension_u256(creator_addr, collection_name_str, key_str, value);
+        internal_set_lootbox_extension_u256(creator, collection_name_str, key_str, value);
     }
 }
