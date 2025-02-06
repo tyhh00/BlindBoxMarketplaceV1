@@ -1123,7 +1123,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
         // Upgrading SFT/NFT to NFT based on Random Seed
         let dynamic_seed = get_lootbox_extension_bool(lootbox.collection_resource_address, pending_reward.collection_name, string::utf8(b"dynamic_seed_enabled"));
-        if (dynamic_seed == option::some(true)) {
+        if (dynamic_seed == option::some(true) && false) {
             let property_keys = vector[
                 string::utf8(b"rarity"),
                 string::utf8(b"seed"),
