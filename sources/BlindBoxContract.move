@@ -1147,8 +1147,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         };
 
         //return values are public fun get_token_id_fields(token_id: &TokenId): (address, String, String, u64) {
-        let tokenIDFields = token::get_token_id_fields(token_minted_id);
-        let property_version = &tokenIDFields(3);
+        let (_, _, _, property_version) = token::get_token_id_fields(token_minted_id);
 
         vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifierV2 {
             creator: lootbox.collection_resource_address,
