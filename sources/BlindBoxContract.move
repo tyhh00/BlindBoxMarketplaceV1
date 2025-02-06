@@ -782,7 +782,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             if(curSupply != option::none()) {
                 let maxSupply = token::get_tokendata_maximum(token_data_id);
                 if (maxSupply != 0) {
-                    if(curSupply >= maxSupply) {
+                    //curSupply is std::option::some(u64) so how to access the value?
+                    let curSupplyValue = option::borrow(&curSupply);
+                    if(curSupplyValue >= maxSupply) {
                         continue;
                     };
                 };
