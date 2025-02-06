@@ -1862,6 +1862,8 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     */
 
+
+
     // Internal helper function to initialize extension table
     fun internal_init_lootbox_extension_table(
         extensions: &mut LootboxExtensions,
@@ -1972,15 +1974,19 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     // Internal helper functions that don't require Lootboxes access
     fun internal_set_lootbox_extension_string(
-        creator_addr: address,
+        creator: &signer,
         collection_name_str: String,
         key_str: String,
         value_str: String
+
     ) acquires LootboxExtensions {
         // Initialize extensions if they don't exist
+        let creator_addr = signer::address_of(creator);
         if (!exists<LootboxExtensions>(creator_addr)) {
-            move_to_sender(LootboxExtensions {
+            move_to(creator, LootboxExtensions {
                 extensions: table::new()
+
+
             });
         };
 
@@ -2012,14 +2018,17 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     }
 
     fun internal_set_lootbox_extension_bool(
-        creator_addr: address,
+        creator: &signer,
         collection_name_str: String,
         key_str: String,
         value: bool
+
     ) acquires LootboxExtensions {
+        let creator_addr = signer::address_of(creator);
         if (!exists<LootboxExtensions>(creator_addr)) {
-            move_to_sender(LootboxExtensions {
+            move_to(creator, LootboxExtensions {
                 extensions: table::new()
+
             });
         };
 
@@ -2048,13 +2057,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     }
 
     fun internal_set_lootbox_extension_u64(
-        creator_addr: address,
+        creator: &signer,
         collection_name_str: String,
         key_str: String,
         value: u64
+
     ) acquires LootboxExtensions {
+        let creator_addr = signer::address_of(creator);
         if (!exists<LootboxExtensions>(creator_addr)) {
-            move_to_sender(LootboxExtensions {
+            move_to(creator, LootboxExtensions {
+
                 extensions: table::new()
             });
         };
@@ -2084,13 +2096,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     }
 
     fun internal_set_lootbox_extension_u256(
-        creator_addr: address,
+        creator: &signer,
         collection_name_str: String,
         key_str: String,
         value: u256
+
     ) acquires LootboxExtensions {
+        let creator_addr = signer::address_of(creator);
         if (!exists<LootboxExtensions>(creator_addr)) {
-            move_to_sender(LootboxExtensions {
+            move_to(creator, LootboxExtensions {
+
                 extensions: table::new()
             });
         };
