@@ -1336,11 +1336,12 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             let token_data_id = token::create_token_data_id(
                 token.creator,
                 token.collection,
-                token.name
+                token.name,
             );
 
+
             // Create token id with property version 0
-            let token_id = token::create_token_id(token_data_id, 0);
+            let token_id = token::create_token_id(token_data_id, token.property_version);
             
             // Get balance and transfer if available
             let balance = token::balance_of(claim_info.resource_signer_address, token_id);
