@@ -30,6 +30,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     //DVRF
     use supra_addr::supra_vrf;
     use supra_addr::deposit;
+    use std::bcs;
 
     // Constants
     const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V17";
@@ -72,6 +73,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     const ENOT_WHITELISTED: u64 = 31;
     const EINSUFFICIENT_WHITELIST_AMOUNT: u64 = 32;
     const EINVALID_MODULE_RESOURCE_SIGNER: u64 = 33;
+    const EINVALID_EXTENSION_KEY: u64 = 34;
+    const EINVALID_EXTENSION_TYPE: u64 = 35;
+    const EINVALID_EXTENSION_VALUE: u64 = 36;
+    const EINVALID_EXTENSION_TABLE: u64 = 37;
+    const EINVALID_TYPE: u64 = 38;
 
     // Market Settings
     //use projectOwnerAdr::BlindBoxAdminContract_Crystara_TestV1::get_resource_address as adminResourceAddressSettings;
@@ -2025,17 +2031,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         }
     }
 
-    // Helper function to get all keys from a table
-    fun get_all_keys<K: copy, V>(table: &table::Table<K, V>): vector<K> {
-        let keys = vector::empty<K>();
-        let iter = table::iter(table);
-        while (table::prepare<K, V>(&mut iter)) {
-            let (key, _) = table::next<K, V>(&mut iter);
-            vector::push_back(&mut keys, *key);
-        };
-        keys
-    }
-
     // Helper functions for type checking and conversion
     fun is_string<T>(): bool {
         type_info::type_of<T>() == type_info::type_of<String>()
@@ -2055,21 +2050,21 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     fun to_string<T>(value: T): String {
         assert!(is_string<T>(), error::invalid_argument(EINVALID_TYPE));
-        from_bytes(to_bytes(&value))
+        bcs::from_bytes(&bcs::to_bytes(&value))
     }
 
     fun to_bool<T>(value: T): bool {
         assert!(is_bool<T>(), error::invalid_argument(EINVALID_TYPE));
-        from_bytes(to_bytes(&value))
+        bcs::from_bytes(&bcs::to_bytes(&value))
     }
 
     fun to_u64<T>(value: T): u64 {
         assert!(is_u64<T>(), error::invalid_argument(EINVALID_TYPE));
-        from_bytes(to_bytes(&value))
+        bcs::from_bytes(&bcs::to_bytes(&value))
     }
 
     fun to_u256<T>(value: T): u256 {
         assert!(is_u256<T>(), error::invalid_argument(EINVALID_TYPE));
-        from_bytes(to_bytes(&value))
+        bcs::from_bytes(&bcs::to_bytes(&value))
     }
 }
