@@ -1916,14 +1916,71 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         );
     }
 
-    // Similar functions for bool, u64, and u256
+    // Internal helper function to initialize extension table
+    fun internal_init_lootbox_extension_table(
+        extensions: &mut LootboxExtensions,
+        creator_addr: address,
+        collection_name_str: String
+    ) {
+        if (!table::contains(&extensions.extensions, collection_name_str)) {
+            table::add(&mut extensions.extensions, collection_name_str, LootboxExtension {
+                creator: creator_addr,
+                collectionName: collection_name_str,
+                extended_strings: table::new(),
+                extended_bools: table::new(),
+                extended_u64: table::new(),
+                extended_u256: table::new(),
+            });
+        };
+    }
+
     public entry fun set_lootbox_extension_bool(
         creator: &signer,
         collection_name: vector<u8>,
         key: vector<u8>,
         value: bool
     ) acquires LootboxExtensions, Lootboxes {
-        // Similar implementation as set_lootbox_extension_string but for bool
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let key_str = string::utf8(key);
+
+        // Verify lootbox ownership
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Initialize extensions if they don't exist
+        if (!exists<LootboxExtensions>(creator_addr)) {
+            move_to(creator, LootboxExtensions {
+                extensions: table::new()
+            });
+        };
+
+        let extensions = borrow_global_mut<LootboxExtensions>(creator_addr);
+        
+        // Initialize extension table if needed
+        internal_init_lootbox_extension_table(extensions, creator_addr, collection_name_str);
+        let extension = table::borrow_mut(&mut extensions.extensions, collection_name_str);
+        
+        // Update bool value
+        if (table::contains(&extension.extended_bools, key_str)) {
+            *table::borrow_mut(&mut extension.extended_bools, key_str) = value;
+        } else {
+            table::add(&mut extension.extended_bools, key_str, value);
+        };
+
+        // Emit event
+        event::emit(
+            LootboxExtensionUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                updated_strings: vector::empty(),
+                updated_bools: vector[key_str],
+                updated_u64s: vector::empty(),
+                updated_u256s: vector::empty(),
+                timestamp: timestamp::now_microseconds(),
+            }
+        );
     }
 
     public entry fun set_lootbox_extension_u64(
@@ -1932,7 +1989,47 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         key: vector<u8>,
         value: u64
     ) acquires LootboxExtensions, Lootboxes {
-        // Similar implementation as set_lootbox_extension_string but for u64
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let key_str = string::utf8(key);
+
+        // Verify lootbox ownership
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Initialize extensions if they don't exist
+        if (!exists<LootboxExtensions>(creator_addr)) {
+            move_to(creator, LootboxExtensions {
+                extensions: table::new()
+            });
+        };
+
+        let extensions = borrow_global_mut<LootboxExtensions>(creator_addr);
+        
+        // Initialize extension table if needed
+        internal_init_lootbox_extension_table(extensions, creator_addr, collection_name_str);
+        let extension = table::borrow_mut(&mut extensions.extensions, collection_name_str);
+        
+        // Update u64 value
+        if (table::contains(&extension.extended_u64, key_str)) {
+            *table::borrow_mut(&mut extension.extended_u64, key_str) = value;
+        } else {
+            table::add(&mut extension.extended_u64, key_str, value);
+        };
+
+        // Emit event
+        event::emit(
+            LootboxExtensionUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                updated_strings: vector::empty(),
+                updated_bools: vector::empty(),
+                updated_u64s: vector[key_str],
+                updated_u256s: vector::empty(),
+                timestamp: timestamp::now_microseconds(),
+            }
+        );
     }
 
     public entry fun set_lootbox_extension_u256(
@@ -1941,7 +2038,47 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         key: vector<u8>,
         value: u256
     ) acquires LootboxExtensions, Lootboxes {
-        // Similar implementation as set_lootbox_extension_string but for u256
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let key_str = string::utf8(key);
+
+        // Verify lootbox ownership
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        // Initialize extensions if they don't exist
+        if (!exists<LootboxExtensions>(creator_addr)) {
+            move_to(creator, LootboxExtensions {
+                extensions: table::new()
+            });
+        };
+
+        let extensions = borrow_global_mut<LootboxExtensions>(creator_addr);
+        
+        // Initialize extension table if needed
+        internal_init_lootbox_extension_table(extensions, creator_addr, collection_name_str);
+        let extension = table::borrow_mut(&mut extensions.extensions, collection_name_str);
+        
+        // Update u256 value
+        if (table::contains(&extension.extended_u256, key_str)) {
+            *table::borrow_mut(&mut extension.extended_u256, key_str) = value;
+        } else {
+            table::add(&mut extension.extended_u256, key_str, value);
+        };
+
+        // Emit event
+        event::emit(
+            LootboxExtensionUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                updated_strings: vector::empty(),
+                updated_bools: vector::empty(),
+                updated_u64s: vector::empty(),
+                updated_u256s: vector[key_str],
+                timestamp: timestamp::now_microseconds(),
+            }
+        );
     }
 
     #[view]
