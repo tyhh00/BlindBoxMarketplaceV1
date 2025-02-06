@@ -1115,6 +1115,25 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             1  // amount
         );
 
+        // Upgrading SFT/NFT to NFT based on Random Seed
+        let dynamic_seed = get_lootbox_extension_bool(lootbox.collection_resource_address, pending_reward.collection_name, string::utf8(b"dynamic_seed_enabled"));
+        if (dynamic_seed == option::some(true)) {
+            let property_keys = vector[
+                string::utf8(b"rarity"),
+                string::utf8(b"seed"),
+                ];
+            let property_values = vector[selected_rarity, random_num];
+            let property_types = vector[string::utf8(b"String"), string::utf8(b"u256")];
+            token_minted_id = token::mutate_one_token(
+                &collection_signer,
+                signer::address_of(&collection_signer),
+                token_minted_id,
+                property_keys,
+                property_values,
+                property_types,
+            );
+        };
+
         // Transfer token to buyer escrow resource account
         token::direct_transfer(
             &collection_signer,
