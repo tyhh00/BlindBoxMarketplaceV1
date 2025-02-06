@@ -1147,7 +1147,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         };
 
         //return values are public fun get_token_id_fields(token_id: &TokenId): (address, String, String, u64) {
-        let (minted_creator, minted_collection, minted_tokenname, minted_property_version) = token::get_token_id_fields(token_minted_id);
+        let (minted_creator, minted_collection, minted_tokenname, minted_property_version) = token::get_token_id_fields(&token_minted_id);
 
 
         vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifierV2 {
