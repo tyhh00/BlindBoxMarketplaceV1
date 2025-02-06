@@ -908,10 +908,11 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
 
-        let dynamic_seed = get_lootbox_extension_bool(creator_addr, collection_name_str, string::utf8(b"dynamic_seed_enabled"));
+        let dynamic_seed = get_lootbox_extension_bool(lootbox.collection_resource_address, collection_name_str, string::utf8(b"dynamic_seed_enabled"));
         if (dynamic_seed == option::none()) {
-            // Default enable dynamic seed. Can internally set because lootbox is owned by creator
-            internal_set_lootbox_extension_bool(creator_addr, collection_name_str, string::utf8(b"dynamic_seed_enabled"), true);
+            let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+            // Store seed in extension
+            set_lootbox_extension_bool(&collection_signer, collection_name, b"dynamic_seed_enabled", true);
         };
 
         // Check if price is set
@@ -1860,6 +1861,26 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     }
 
     */
+
+    // Internal helper function to initialize extension table
+    fun internal_init_lootbox_extension_table(
+        extensions: &mut LootboxExtensions,
+        creator_addr: address,
+        collection_name_str: String
+    ) {
+        if (!table::contains(&extensions.extensions, collection_name_str)) {
+            table::add(&mut extensions.extensions, collection_name_str, LootboxExtension {
+                creator: creator_addr,
+                collectionName: collection_name_str,
+                extended_strings: table::new(),
+                extended_bools: table::new(),
+                extended_u64: table::new(),
+                extended_u256: table::new(),
+            });
+        };
+    }
+
+    
 
     #[view]
     public fun get_lootbox_extension_string(
