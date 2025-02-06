@@ -257,8 +257,37 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
       price_modifies_when_lack_of_certain_rarity: bool, //If true, the price will increase if the certain rarity is sold out
       rarities_price_modifier_if_sold_out: table::Table<String, u64>, //Map rarity to price modifier
+    }
 
-      dynamic_seed_generation: Option<bool>, //If true, the seed will be generated dynamically, making SFTs unique
+    #[event]
+    struct LootboxExtensionUpdatedEvent has drop, store {
+        creator: address,
+        collection_name: String,
+        // Changed values
+        updated_strings: vector<String>, // keys that were updated
+        updated_bools: vector<String>,
+        updated_u64s: vector<String>,
+        updated_u256s: vector<String>,
+        // Current state
+        current_strings: vector<String>, // all keys
+        current_bools: vector<String>,
+        current_u64s: vector<String>,
+        current_u256s: vector<String>,
+        timestamp: u64,
+    }
+
+    struct LootboxExtension has store {
+        creator: address,
+        collectionName: String,
+        extended_strings: table::Table<String, String>,
+        extended_bools: table::Table<String, bool>,
+        extended_u64: table::Table<String, u64>,
+        extended_u256: table::Table<String, u256>,
+    }
+
+    // Add new resource to store extensions
+    struct LootboxExtensions has key {
+        extensions: table::Table<String, LootboxExtension>, // key is collection_name
     }
 
     /// Table to store all lootboxes by creator and collection name
@@ -468,8 +497,6 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         //Not Yet Implemented
         requiresKey: requiresKey,
         keysCollectionName: string::utf8(keys_collection_name),
-        
-        dynamic_seed_generation: option::some(true),
       };
 
       // Borrow a mutable reference to the `Lootboxes` resource
@@ -1827,4 +1854,222 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     */
 
+    // Function to set extension values
+    public entry fun set_extension_value<T: copy + drop + store>(
+        creator: &signer,
+        collection_name: vector<u8>,
+        key: vector<u8>,
+        value: T
+    ) acquires LootboxExtensions, Lootboxes {
+        let creator_addr = signer::address_of(creator);
+        let collection_name_str = string::utf8(collection_name);
+        let key_str = string::utf8(key);
+
+        // Verify lootbox ownership
+        let lootboxes = borrow_global<Lootboxes>(creator_addr);
+        let lootbox = table::borrow(&lootboxes.lootbox_table, collection_name_str);
+        assert!(lootbox.creator == creator_addr, error::permission_denied(ENOT_AUTHORIZED));
+
+        let extensions = borrow_global_mut<LootboxExtensions>(@projectOwnerAdr);
+        
+        // Create extension if it doesn't exist
+        if (!table::contains(&extensions.extensions, collection_name_str)) {
+            table::add(&mut extensions.extensions, collection_name_str, LootboxExtension {
+                creator: creator_addr,
+                collectionName: collection_name_str,
+                extended_strings: table::new(),
+                extended_bools: table::new(),
+                extended_u64: table::new(),
+                extended_u256: table::new(),
+            });
+        };
+
+        let extension = table::borrow_mut(&mut extensions.extensions, collection_name_str);
+        
+        // Track which value was updated for the event
+        let updated_strings = vector::empty<String>();
+        let updated_bools = vector::empty<String>();
+        let updated_u64s = vector::empty<String>();
+        let updated_u256s = vector::empty<String>();
+
+        // Add value to appropriate table based on type
+        if (is_string<T>()) {
+            let string_value = to_string(value);
+            if (table::contains(&extension.extended_strings, key_str)) {
+                *table::borrow_mut(&mut extension.extended_strings, key_str) = string_value;
+            } else {
+                table::add(&mut extension.extended_strings, key_str, string_value);
+            };
+            vector::push_back(&mut updated_strings, key_str);
+        } else if (is_bool<T>()) {
+            let bool_value = to_bool(value);
+            if (table::contains(&extension.extended_bools, key_str)) {
+                *table::borrow_mut(&mut extension.extended_bools, key_str) = bool_value;
+            } else {
+                table::add(&mut extension.extended_bools, key_str, bool_value);
+            };
+            vector::push_back(&mut updated_bools, key_str);
+        } else if (is_u64<T>()) {
+            let u64_value = to_u64(value);
+            if (table::contains(&extension.extended_u64, key_str)) {
+                *table::borrow_mut(&mut extension.extended_u64, key_str) = u64_value;
+            } else {
+                table::add(&mut extension.extended_u64, key_str, u64_value);
+            };
+            vector::push_back(&mut updated_u64s, key_str);
+        } else if (is_u256<T>()) {
+            let u256_value = to_u256(value);
+            if (table::contains(&extension.extended_u256, key_str)) {
+                *table::borrow_mut(&mut extension.extended_u256, key_str) = u256_value;
+            } else {
+                table::add(&mut extension.extended_u256, key_str, u256_value);
+            };
+            vector::push_back(&mut updated_u256s, key_str);
+        };
+
+        // Get all current keys for the event
+        let current_strings = get_all_keys(&extension.extended_strings);
+        let current_bools = get_all_keys(&extension.extended_bools);
+        let current_u64s = get_all_keys(&extension.extended_u64);
+        let current_u256s = get_all_keys(&extension.extended_u256);
+
+        // Emit event
+        event::emit(
+            LootboxExtensionUpdatedEvent {
+                creator: creator_addr,
+                collection_name: collection_name_str,
+                updated_strings,
+                updated_bools,
+                updated_u64s,
+                updated_u256s,
+                current_strings,
+                current_bools,
+                current_u64s,
+                current_u256s,
+                timestamp: timestamp::now_microseconds(),
+            }
+        );
+    }
+
+    #[view]
+    public fun get_extension_string(
+        collection_name: String,
+        key: String
+    ): Option<String> acquires LootboxExtensions {
+        let extensions = borrow_global<LootboxExtensions>(@projectOwnerAdr);
+        if (table::contains(&extensions.extensions, collection_name)) {
+            let extension = table::borrow(&extensions.extensions, collection_name);
+            if (table::contains(&extension.extended_strings, key)) {
+                option::some(*table::borrow(&extension.extended_strings, key))
+            } else {
+                option::none()
+            }
+        } else {
+            option::none()
+        }
+    }
+
+    // Similar view functions for bool, u64, and u256 values
+
+    #[view]
+    public fun get_extension_bool(
+        collection_name: String,
+        key: String
+    ): Option<bool> acquires LootboxExtensions {
+        let extensions = borrow_global<LootboxExtensions>(@projectOwnerAdr);
+        if (table::contains(&extensions.extensions, collection_name)) {
+            let extension = table::borrow(&extensions.extensions, collection_name);
+            if (table::contains(&extension.extended_bools, key)) {
+                option::some(*table::borrow(&extension.extended_bools, key))
+            } else {
+                option::none()
+            }
+        } else {
+            option::none()
+        }
+    }
+
+    #[view]
+    public fun get_extension_u64(
+        collection_name: String,
+        key: String
+    ): Option<u64> acquires LootboxExtensions {
+        let extensions = borrow_global<LootboxExtensions>(@projectOwnerAdr);
+        if (table::contains(&extensions.extensions, collection_name)) {
+            let extension = table::borrow(&extensions.extensions, collection_name);
+            if (table::contains(&extension.extended_u64, key)) {
+                option::some(*table::borrow(&extension.extended_u64, key))
+            } else {
+                option::none()
+            }
+        } else {
+            option::none()
+        }
+    }
+
+    #[view]
+    public fun get_extension_u256(
+        collection_name: String,
+        key: String
+    ): Option<u256> acquires LootboxExtensions {
+        let extensions = borrow_global<LootboxExtensions>(@projectOwnerAdr);
+        if (table::contains(&extensions.extensions, collection_name)) {
+            let extension = table::borrow(&extensions.extensions, collection_name);
+            if (table::contains(&extension.extended_u256, key)) {
+                option::some(*table::borrow(&extension.extended_u256, key))
+            } else {
+                option::none()
+            }
+        } else {
+            option::none()
+        }
+    }
+
+    // Helper function to get all keys from a table
+    fun get_all_keys<K: copy, V>(table: &table::Table<K, V>): vector<K> {
+        let keys = vector::empty<K>();
+        let iter = table::iter(table);
+        while (table::prepare<K, V>(&mut iter)) {
+            let (key, _) = table::next<K, V>(&mut iter);
+            vector::push_back(&mut keys, *key);
+        };
+        keys
+    }
+
+    // Helper functions for type checking and conversion
+    fun is_string<T>(): bool {
+        type_info::type_of<T>() == type_info::type_of<String>()
+    }
+
+    fun is_bool<T>(): bool {
+        type_info::type_of<T>() == type_info::type_of<bool>()
+    }
+
+    fun is_u64<T>(): bool {
+        type_info::type_of<T>() == type_info::type_of<u64>()
+    }
+
+    fun is_u256<T>(): bool {
+        type_info::type_of<T>() == type_info::type_of<u256>()
+    }
+
+    fun to_string<T>(value: T): String {
+        assert!(is_string<T>(), error::invalid_argument(EINVALID_TYPE));
+        from_bytes(to_bytes(&value))
+    }
+
+    fun to_bool<T>(value: T): bool {
+        assert!(is_bool<T>(), error::invalid_argument(EINVALID_TYPE));
+        from_bytes(to_bytes(&value))
+    }
+
+    fun to_u64<T>(value: T): u64 {
+        assert!(is_u64<T>(), error::invalid_argument(EINVALID_TYPE));
+        from_bytes(to_bytes(&value))
+    }
+
+    fun to_u256<T>(value: T): u256 {
+        assert!(is_u256<T>(), error::invalid_argument(EINVALID_TYPE));
+        from_bytes(to_bytes(&value))
+    }
 }
