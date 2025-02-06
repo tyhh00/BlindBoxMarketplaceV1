@@ -34,7 +34,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     // Constants
     const RESOURCE_ACCOUNT_SEED: vector<u8> = b"LOOTBOX_RESOURCE_V17";
-    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCE_FIXED_V17";
+    const USER_CLAIM_RESOURCE_SEED: vector<u8> = b"USER_CLAIM_RESOURCEV2_V17";
     const CALLBACK_MODULE_NAME: vector<u8> = b"BlindBoxContract_Crystara_TestV17";
 
     /// Error Codes
@@ -164,11 +164,15 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         timestamp: u64
     }
 
+    //DEPRECATED
     #[event]
-    struct TokensClaimedEvent has drop, store {
+    struct TokensClaimedEvent has drop, store {claimer: address,claim_resource_address: address,tokens_claimed: vector<TokenIdentifier>,total_tokens: u64,timestamp: u64}
+
+    #[event]
+    struct TokensClaimedEventV2 has drop, store {
         claimer: address,
         claim_resource_address: address,
-        tokens_claimed: vector<TokenIdentifier>,
+        tokens_claimed: vector<TokenIdentifierV2>,
         total_tokens: u64,
         timestamp: u64
     }
@@ -318,17 +322,23 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
     }
 
     // Escrow Resource for User Claim from Purchases
-    struct UserClaimResourceInfo has key {
+    struct UserClaimResourceInfoV2 has key {
         resource_signer_cap: account::SignerCapability,
         resource_signer_address: address,
-        claimable_tokens: vector<TokenIdentifier>
+        claimable_tokens: vector<TokenIdentifierV2>
     }
 
-    struct TokenIdentifier has store, drop {
+    struct TokenIdentifierV2 has store, drop {
         creator: address,
         collection: String,
-        name: String
+        name: String,
+        property_version: u64,
     }
+
+    //DEPRECATED
+    struct UserClaimResourceInfo has key { resource_signer_cap: account::SignerCapability, resource_signer_address: address, claimable_tokens: vector<TokenIdentifier> }
+    //DEPRECATED
+    struct TokenIdentifier has store, drop { creator: address, collection: String, name: String }
 
     //Entry Functions
     // Initialize the pending rewards storage
@@ -1025,7 +1035,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
       caller_address: address,
       rng_count: u8,
       client_seed: u64,
-    ) acquires PendingRewards, Lootboxes, UserClaimResourceInfo, LootboxExtensions {
+    ) acquires PendingRewards, Lootboxes, UserClaimResourceInfoV2, LootboxExtensions {
         // Verify VRF result
         let random_numbers = supra_vrf::verify_callback(
             nonce, 
@@ -1100,13 +1110,9 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         // If user claim resource account doesn't exist, create it
         assert!(account::exists_at(user_claim_resource_address), error::not_found(ERESOURCE_ESCROW_CLAIM_ACCOUNT_NOT_EXISTS)); 
         // Get the resource account signer using stored capability
-        let claim_info = borrow_global_mut<UserClaimResourceInfo>(user_claim_resource_address);
+        let claim_info = borrow_global_mut<UserClaimResourceInfoV2>(user_claim_resource_address);
         let user_claim_escrow_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
-        vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifier {
-            creator: lootbox.collection_resource_address,
-            collection: pending_reward.collection_name,
-            name: selected_token
-        });
+
 
         // Mint token into collection owner resource account
         let token_minted_id = token::mint_token(
@@ -1139,6 +1145,16 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 property_types,
             );
         };
+
+        let tokenIDFields = token::get_token_id_fields(token_minted_id);
+        let property_version = *vector::borrow(&tokenIDFields, 3);
+
+        vector::push_back(&mut claim_info.claimable_tokens, TokenIdentifierV2 {
+            creator: lootbox.collection_resource_address,
+            collection: pending_reward.collection_name,
+            name: selected_token,
+            property_version: property_version
+        });
 
         // Transfer token to buyer escrow resource account
         token::direct_transfer(
@@ -1261,10 +1277,10 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
                 user_claim_seed
             );
             
-            move_to(&resource_account, UserClaimResourceInfo {
+            move_to(&resource_account, UserClaimResourceInfoV2 {
                 resource_signer_cap: resource_signer_cap,
                 resource_signer_address: signer::address_of(&resource_account),
-                claimable_tokens: vector::empty<TokenIdentifier>()
+                claimable_tokens: vector::empty<TokenIdentifierV2>()
             });
 
             // Emit event
@@ -1282,7 +1298,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
     public entry fun claim_all_from_escrow(
         claimer: &signer
-    ) acquires UserClaimResourceInfo {
+    ) acquires UserClaimResourceInfoV2 {
         let claimer_addr = signer::address_of(claimer);
         let user_claim_seed = USER_CLAIM_RESOURCE_SEED;
         let user_claim_resource_address = account::create_resource_address(&claimer_addr, user_claim_seed);
@@ -1293,21 +1309,21 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
             error::not_found(ERESOURCE_ACCOUNT_NOT_EXISTS)
         );
 
-        // Check if UserClaimResourceInfo exists
+        // Check if UserClaimResourceInfoV2 exists
         assert!(
-            exists<UserClaimResourceInfo>(user_claim_resource_address),
+            exists<UserClaimResourceInfoV2>(user_claim_resource_address),
             error::not_found(ERESOURCE_ACCOUNT_NOT_EXISTS)
         );
         
         // Get claim info and check if there are tokens to claim
-        let claim_info = borrow_global_mut<UserClaimResourceInfo>(user_claim_resource_address);
+        let claim_info = borrow_global_mut<UserClaimResourceInfoV2>(user_claim_resource_address);
         assert!(
             !vector::is_empty(&claim_info.claimable_tokens),
             error::invalid_state(ENO_TOKENS_TO_CLAIM)
         );
 
         let resource_signer = account::create_signer_with_capability(&claim_info.resource_signer_cap);
-        let claimed_tokens = vector::empty<TokenIdentifier>();
+        let claimed_tokens = vector::empty<TokenIdentifierV2>();
         let total_claimed = 0;
 
         // Transfer all tokens
@@ -1340,7 +1356,7 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
 
         // Emit detailed claim event
         event::emit(
-            TokensClaimedEvent {
+            TokensClaimedEventV2 {
                 claimer: claimer_addr,
                 claim_resource_address: user_claim_resource_address,
                 tokens_claimed: claimed_tokens,
