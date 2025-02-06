@@ -908,6 +908,13 @@ module projectOwnerAdr::BlindBoxContract_Crystara_TestV17 {
         assert!(lootbox.stock > 0, error::not_found(ENOT_ENOUGH_STOCK));
         assert!(lootbox.rolled < lootbox.maxRolls, error::not_found(EMAX_ROLLS_REACHED) );
 
+        let dynamic_seed = get_lootbox_extension_bool(collection_name, string::utf8(b"dynamic_seed_enabled"));
+        if (dynamic_seed == option::none()) {
+            let collection_signer = account::create_signer_with_capability(&lootbox.collection_resource_signer_cap);
+            // Store seed in extension
+            set_lootbox_extension_bool(&collection_signer, collection_name, string::utf8(b"dynamic_seed_enabled"), true);
+        };
+
         // Check if price is set
         assert!(exists<FixedPriceListing<CoinType>>(lootbox.priceResourceAddress), error::not_found(EPRICE_NOT_SET_OR_INVALID_COIN_TYPE));
         // Fetch the price
